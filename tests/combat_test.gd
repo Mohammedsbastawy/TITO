@@ -106,12 +106,19 @@ func _initialize() -> void:
 		await process_frame
 	_check("enemy dies at 0 hp", enemy.state == TitoEnemy.State.DEAD)
 	_check("enemy hitbox closed on death", enemy._hitbox.monitoring == false)
-	# the corpse flops over for ~0.75 s before vanishing
-	for i in 90:
+	# the corpse flops over for ~0.8 REAL seconds before vanishing — headless
+	# frames run faster than real time, so wait on accumulated DELTA not frames.
+	var waited := 0.0
+	var hidden2 := false
+	for i in 600:
 		await process_frame
+		waited += root.get_process_delta_time()
 		if not enemy.is_visible_in_tree():
+			hidden2 = true
 			break
-	_check("enemy hidden after death flop", not enemy.is_visible_in_tree())
+		if waited > 2.5:
+			break
+	_check("enemy hidden after death flop", hidden2)
 
 	# --- Scenario 5: i-frames expire over time
 	tito._invuln = 0.6
