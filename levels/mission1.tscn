@@ -1,0 +1,272 @@
+[gd_scene load_steps=27 format=3]
+
+[ext_resource type="PackedScene" path="res://player/tito.tscn" id="1_tito"]
+[ext_resource type="PackedScene" path="res://enemies/enemy.tscn" id="2_enemy"]
+[ext_resource type="PackedScene" path="res://world/rope.tscn" id="3_rope"]
+[ext_resource type="PackedScene" path="res://world/checkpoint.tscn" id="4_cp"]
+[ext_resource type="PackedScene" path="res://world/endzone.tscn" id="5_end"]
+[ext_resource type="PackedScene" path="res://world/deathzone.tscn" id="6_death"]
+
+[sub_resource type="StandardMaterial3D" id="mat_ground"]
+albedo_color = Color(0.2, 0.22, 0.3, 1)
+
+[sub_resource type="BoxShape3D" id="shapeA"]
+size = Vector3(24, 1, 4)
+
+[sub_resource type="BoxMesh" id="meshA"]
+size = Vector3(24, 1, 4)
+
+[sub_resource type="BoxShape3D" id="shapeB"]
+size = Vector3(10, 1, 4)
+
+[sub_resource type="BoxMesh" id="meshB"]
+size = Vector3(10, 1, 4)
+
+[sub_resource type="BoxShape3D" id="shapeCol"]
+size = Vector3(3, 1.5, 4)
+
+[sub_resource type="BoxMesh" id="meshCol"]
+size = Vector3(3, 1.5, 4)
+
+[sub_resource type="BoxShape3D" id="shapeD"]
+size = Vector3(24.5, 2, 4)
+
+[sub_resource type="BoxMesh" id="meshD"]
+size = Vector3(24.5, 2, 4)
+
+[sub_resource type="BoxShape3D" id="shapeCeil"]
+size = Vector3(8, 0.8, 3)
+
+[sub_resource type="BoxMesh" id="meshCeil"]
+size = Vector3(8, 0.8, 3)
+
+[sub_resource type="StandardMaterial3D" id="mat_dark"]
+albedo_color = Color(0.15, 0.16, 0.22, 1)
+
+[sub_resource type="BoxShape3D" id="shapeTower"]
+size = Vector3(4, 6, 4)
+
+[sub_resource type="BoxMesh" id="meshTower"]
+size = Vector3(4, 6, 4)
+
+[sub_resource type="BoxShape3D" id="shapeStep"]
+size = Vector3(1.25, 1, 4)
+
+[sub_resource type="BoxMesh" id="meshStep"]
+size = Vector3(1.25, 1, 4)
+
+[sub_resource type="BoxShape3D" id="shapeG"]
+size = Vector3(17.75, 2, 4)
+
+[sub_resource type="BoxMesh" id="meshG"]
+size = Vector3(17.75, 2, 4)
+
+[sub_resource type="BoxShape3D" id="shapeWall"]
+size = Vector3(1, 8, 4)
+
+[sub_resource type="BoxMesh" id="meshWall"]
+size = Vector3(1, 8, 4)
+
+[node name="Mission1" type="Node3D"]
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.707107, 0, 0.707107, 0, 1, 0, -0.707107, 0, 0.707107, 5, 10, 5)
+shadow_enabled = true
+
+[node name="GroundA" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundA"]
+shape = SubResource("shapeA")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GroundA"]
+mesh = SubResource("meshA")
+material_override = SubResource("mat_ground")
+
+[node name="GroundB" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, -0.5, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundB"]
+shape = SubResource("shapeB")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GroundB"]
+mesh = SubResource("meshB")
+material_override = SubResource("mat_ground")
+
+[node name="Col1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 25.5, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Col1"]
+shape = SubResource("shapeCol")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Col1"]
+mesh = SubResource("meshCol")
+material_override = SubResource("mat_ground")
+
+[node name="Col2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.5, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Col2"]
+shape = SubResource("shapeCol")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Col2"]
+mesh = SubResource("meshCol")
+material_override = SubResource("mat_ground")
+
+[node name="Col3" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.5, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Col3"]
+shape = SubResource("shapeCol")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Col3"]
+mesh = SubResource("meshCol")
+material_override = SubResource("mat_ground")
+
+[node name="GroundD" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 45.75, -0.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundD"]
+shape = SubResource("shapeD")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GroundD"]
+mesh = SubResource("meshD")
+material_override = SubResource("mat_ground")
+
+[node name="Ceiling" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 2.15, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ceiling"]
+shape = SubResource("shapeCeil")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ceiling"]
+mesh = SubResource("meshCeil")
+material_override = SubResource("mat_dark")
+
+[node name="Tower" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 3.75, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Tower"]
+shape = SubResource("shapeTower")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Tower"]
+mesh = SubResource("meshTower")
+material_override = SubResource("mat_ground")
+
+[node name="Step1" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62.625, 5.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Step1"]
+shape = SubResource("shapeStep")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Step1"]
+mesh = SubResource("meshStep")
+material_override = SubResource("mat_ground")
+
+[node name="Step2" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.875, 4.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Step2"]
+shape = SubResource("shapeStep")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Step2"]
+mesh = SubResource("meshStep")
+material_override = SubResource("mat_ground")
+
+[node name="Step3" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 65.125, 3.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Step3"]
+shape = SubResource("shapeStep")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Step3"]
+mesh = SubResource("meshStep")
+material_override = SubResource("mat_ground")
+
+[node name="Step4" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66.375, 2.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Step4"]
+shape = SubResource("shapeStep")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Step4"]
+mesh = SubResource("meshStep")
+material_override = SubResource("mat_ground")
+
+[node name="Step5" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 67.625, 1.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Step5"]
+shape = SubResource("shapeStep")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Step5"]
+mesh = SubResource("meshStep")
+material_override = SubResource("mat_ground")
+
+[node name="GroundG" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 77.125, -0.25, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="GroundG"]
+shape = SubResource("shapeG")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="GroundG"]
+mesh = SubResource("meshG")
+material_override = SubResource("mat_ground")
+
+[node name="EndWall" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 86.5, 3.75, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="EndWall"]
+shape = SubResource("shapeWall")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="EndWall"]
+mesh = SubResource("meshWall")
+material_override = SubResource("mat_dark")
+
+[node name="DeathZone" parent="." instance=ExtResource("6_death")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, -2.5, 0)
+
+[node name="Rope" parent="." instance=ExtResource("3_rope")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57, 0.75, 0)
+top_y = 7.8
+
+[node name="CP1" parent="." instance=ExtResource("4_cp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 0.75, 0)
+
+[node name="CP2" parent="." instance=ExtResource("4_cp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 55, 0.75, 0)
+
+[node name="CP3" parent="." instance=ExtResource("4_cp")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60.5, 6.75, 0)
+
+[node name="EndZone" parent="." instance=ExtResource("5_end")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83, 1.75, 0)
+
+[node name="Enemy1" parent="." instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0.9, 0)
+patrol_min_x = 5.0
+patrol_max_x = 9.0
+vision_range = 4.5
+
+[node name="Enemy2" parent="." instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 71, 2.7, 0)
+patrol_min_x = 69.0
+patrol_max_x = 74.0
+
+[node name="Enemy3" parent="." instance=ExtResource("2_enemy")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 78, 2.7, 0)
+patrol_min_x = 74.5
+patrol_max_x = 80.0
+
+[node name="Tito" parent="." instance=ExtResource("1_tito")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="Intro" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 3.2, 0)
+text = "BABY TITO — Chapter 1: The Escape"
+font_size = 96
+
+[node name="Hints" type="Label3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 2.4, 0)
+text = "A/D move · SPACE jump · CTRL crawl · W/S rope · J punch"
+font_size = 48

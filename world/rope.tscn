@@ -1,0 +1,28 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://world/tito_rope.gd" id="1_rope"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rope"]
+size = Vector3(0.8, 7, 0.8)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_rope"]
+radius = 0.05
+height = 7
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_rope"]
+albedo_color = Color(0.55, 0.4, 0.2, 1)
+
+[node name="Rope" type="Area3D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_rope")
+top_y = 7.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+shape = SubResource("BoxShape3D_rope")
+
+[node name="RopeMesh" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+mesh = SubResource("CylinderMesh_rope")
+material_override = SubResource("StandardMaterial3D_rope")

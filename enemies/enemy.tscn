@@ -1,0 +1,49 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://enemies/tito_enemy.gd" id="1_ai"]
+[ext_resource type="Script" path="res://combat/tito_health.gd" id="2_hp"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_enemy_hit"]
+size = Vector3(1.0, 1.4, 0.9)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
+radius = 0.35
+height = 1.8
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_enemy"]
+radius = 0.35
+height = 1.1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_enemy"]
+albedo_color = Color(0.75, 0.2, 0.2, 1)
+
+[node name="Enemy" type="CharacterBody3D"]
+script = ExtResource("1_ai")
+
+[node name="Health" type="Node" parent="."]
+script = ExtResource("2_hp")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("CapsuleShape3D_enemy")
+
+[node name="Visual" type="MeshInstance3D" parent="."]
+mesh = SubResource("CapsuleMesh_enemy")
+material_override = SubResource("StandardMaterial3D_enemy")
+
+[node name="HurtBox" type="Area3D" parent="." groups=["hurtbox"]]
+collision_layer = 4
+collision_mask = 0
+monitoring = false
+monitorable = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HurtBox"]
+shape = SubResource("CapsuleShape3D_enemy")
+
+[node name="HitBox" type="Area3D" parent="Visual"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.7, 0.2, 0)
+collision_layer = 0
+collision_mask = 2
+monitoring = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="HitBox"]
+shape = SubResource("BoxShape3D_enemy_hit")

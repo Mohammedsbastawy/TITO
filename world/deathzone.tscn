@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://world/tito_deathzone.gd" id="1_death"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_death"]
+size = Vector3(120, 2, 12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_death"]
+size = Vector3(120, 2, 12)
+
+[node name="DeathZone" type="Area3D"]
+collision_layer = 0
+collision_mask = 1
+script = ExtResource("1_death")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_death")
+
+[node name="Red" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_death")
+transparency = 0.7
