@@ -63,7 +63,9 @@ func _initialize() -> void:
 		await process_frame
 	_check("attack is telegraphed (no instant hit)", tito._health.hp == hp_before)
 	var got_hit := false
-	for i in 60:
+	# windup (~0.55s) + strike + physics flush can take ~1.0s real time;
+	# headless frames are shorter than real frames, so budget 180 frames.
+	for i in 180:
 		await process_frame
 		if tito._health.hp < hp_before:
 			got_hit = true
