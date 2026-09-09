@@ -49,6 +49,7 @@ enum AttackPhase { NONE, WINDUP, STRIKE, RECOVER }
 @export var jump_velocity := 10.5   # apex ~1.8m: climbs stairs & pillars
 @export var dodge_chance := 0.35    # vs REPEAT punches (the first always lands)
 @export var aggression := 1.0       # per-enemy courage dial for level designers
+@export var base_tint := Color(0.75, 0.2, 0.2)   # body color at rest (level dressing)
 
 var state := State.PATROL
 
@@ -105,7 +106,6 @@ const EYE_HEIGHT := 0.8
 const COLOR_ALERT := Color(1.0, 0.85, 0.2)
 const COLOR_QUESTION := Color(0.55, 0.85, 1.0)
 const COLOR_ANGRY := Color(1.0, 0.3, 0.15)
-const TINT_PATROL := Color(0.75, 0.2, 0.2)
 
 
 func _ready() -> void:
@@ -850,15 +850,15 @@ func _apply_visual(delta: float) -> void:
 func _state_tint() -> Color:
 	match state:
 		State.PATROL:
-			return TINT_PATROL
+			return base_tint
 		State.SUSPICIOUS:
-			return Color(0.85, 0.5, 0.15)
+			return base_tint.lerp(Color(0.85, 0.5, 0.15), 0.75)
 		State.CHASE:
-			return Color(0.9, 0.12, 0.12)
+			return base_tint.lerp(Color(0.9, 0.12, 0.12), 0.8)
 		State.SEARCH:
-			return Color(0.7, 0.45, 0.3)
+			return base_tint.lerp(Color(0.7, 0.45, 0.3), 0.7)
 		State.WATCH:
-			return Color(0.8, 0.3, 0.3)
+			return base_tint.lerp(Color(0.8, 0.3, 0.3), 0.7)
 		State.STAGGER:
 			return Color(1.0, 0.8, 0.6)
 		State.ATTACK:
@@ -867,7 +867,7 @@ func _state_tint() -> Color:
 					return Color(1.0, 0.45, 0.1)
 				AttackPhase.STRIKE:
 					return Color(1.0, 0.1, 0.05)
-	return TINT_PATROL
+	return base_tint
 
 
 func _land_feedback() -> void:
