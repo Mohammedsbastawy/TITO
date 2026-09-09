@@ -315,11 +315,18 @@ func _update_swing(delta: float) -> void:
 		_hitbox.monitoring = false
 
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, from_pos = null) -> void:
 	if _invuln > 0.0:
 		return
 	_invuln = invulnerability_time
 	_flash_timer = invulnerability_time * 0.75
+	# hit knockback: shove away from the source (unless hanging on a rope)
+	if from_pos is Vector3 and state != State.CLIMB:
+		var kb := signf(global_position.x - (from_pos as Vector3).x)
+		if kb == 0.0:
+			kb = -float(facing)
+		velocity.x = kb * 4.2
+		velocity.y = maxf(velocity.y, 2.4)
 	if _health != null:
 		_health.take_damage(amount)
 

@@ -52,12 +52,16 @@ func _initialize() -> void:
 		await process_frame
 	_check("vision follows facing flip", enemy._can_see_player())
 
-	# --- Scenario 2: enemy attack damages player, i-frames hold + blink
+	# --- Scenario 2: enemy attack is telegraphed (windup), then lands; i-frames
 	enemy.set_physics_process(true)   # brain back on for the attack scenario
 	tito.global_position = Vector3(enemy.global_position.x + 1.0, gy, 0)
 	enemy.state = TitoEnemy.State.ATTACK
 	enemy._attack_timer = 0.0
 	var hp_before: int = tito._health.hp
+	# the windup must NEVER deal instant damage: free reaction time up front
+	for i in 6:
+		await process_frame
+	_check("attack is telegraphed (no instant hit)", tito._health.hp == hp_before)
 	var got_hit := false
 	for i in 60:
 		await process_frame
@@ -94,6 +98,7 @@ func _initialize() -> void:
 			player_hit_enemy = true
 			break
 	_check("player punch damages enemy", player_hit_enemy)
+	_check("punched enemy staggers (hit reaction)", enemy.state == TitoEnemy.State.STAGGER)
 
 	# --- Scenario 4: enemy death (kill via take_damage, check no un-die)
 	enemy.take_damage(999)
@@ -101,7 +106,12 @@ func _initialize() -> void:
 		await process_frame
 	_check("enemy dies at 0 hp", enemy.state == TitoEnemy.State.DEAD)
 	_check("enemy hitbox closed on death", enemy._hitbox.monitoring == false)
-	_check("enemy hidden on death", not enemy.is_visible_in_tree())
+	# the corpse flops over for ~0.75 s before vanishing
+	for i in 90:
+		await process_frame
+		if not enemy.is_visible_in_tree():
+			break
+	_check("enemy hidden after death flop", not enemy.is_visible_in_tree())
 
 	# --- Scenario 5: i-frames expire over time
 	tito._invuln = 0.6
