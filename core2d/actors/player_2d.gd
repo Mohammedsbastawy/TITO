@@ -67,6 +67,10 @@ var _dead_t := 0.0
 
 var _visual: Node2D
 var _body_poly: Polygon2D
+var _hero: Sprite2D
+var _hero_sc := 1.0
+
+const HERO_TEX := "res://assets2d/sprites/chars/tito_idle.png"
 var _ring: Polygon2D          # parry flash ring
 var _hitbox: HitBox2D
 var _hit_shape: CollisionShape2D
@@ -184,6 +188,19 @@ func _build_visual() -> void:
 	_ring.polygon = pts
 	_ring.color = Color(0.4, 1.0, 0.95, 0.0)
 	_visual.add_child(_ring)
+	# placeholder inked sheet until the real animation frames land
+	_hero = Sprite2D.new()
+	_hero.texture = load(HERO_TEX) as Texture2D
+	if _hero.texture != null:
+		_hero_sc = 74.0 / float(_hero.texture.get_height())
+		_hero.scale = Vector2(_hero_sc, _hero_sc)
+		_hero.centered = false
+		_hero.position = Vector2(-_hero.texture.get_width() * _hero_sc * 0.5, -72.0)
+		_visual.add_child(_hero)
+		for c in _visual.get_children():
+			if c is Polygon2D and c != _ring:
+				c.visible = false
+		_ring.z_index = 1
 
 
 # ============================================================ main loop ==
@@ -580,3 +597,9 @@ func _apply_visual(delta: float) -> void:
 		_body_poly.modulate.a = 0.45 + 0.35 * sin(Time.get_ticks_msec() / 40.0)
 	else:
 		_body_poly.modulate.a = 1.0
+	# placeholder sheet mirrors tint / blink / squash of the old capsule
+	if _hero != null:
+		var tint := _body_poly.color
+		tint.a *= _body_poly.modulate.a
+		_hero.modulate = tint
+		_hero.scale = Vector2(_hero_sc * _body_poly.scale.x, _hero_sc * _body_poly.scale.y)

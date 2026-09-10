@@ -51,6 +51,10 @@ var _pattern_idx := 0
 var _rush_hit := false
 var _flash_t := 0.0
 var _visual: Node2D
+var _sheet: Sprite2D
+var _sheet_sc := 1.0
+
+const SHEET_TEX := "res://assets2d/sprites/chars/raven_idle.png"
 var _poly: Polygon2D
 var _indicator: Label2D
 var _ind_t := 0.0
@@ -109,6 +113,18 @@ func _build_visual() -> void:
 			Vector2(ez + 2, -69), Vector2(ez - 2, -69)])
 		eye.color = Color(1.0, 0.45, 0.15)
 		_visual.add_child(eye)
+	# placeholder inked sheet until the real animation frames land
+	_sheet = Sprite2D.new()
+	_sheet.texture = load(SHEET_TEX) as Texture2D
+	if _sheet.texture != null:
+		_sheet_sc = 94.0 / float(_sheet.texture.get_height())
+		_sheet.scale = Vector2(_sheet_sc, _sheet_sc)
+		_sheet.centered = false
+		_sheet.position = Vector2(-_sheet.texture.get_width() * _sheet_sc * 0.5, -92.0)
+		_visual.add_child(_sheet)
+		for c in _visual.get_children():
+			if c is Polygon2D:
+				c.visible = false
 	_indicator = Label2D.new()
 	_indicator.font = load(FONT_BOLD) as Font
 	_indicator.font_size = 30
@@ -461,6 +477,10 @@ func _apply_visual(delta: float) -> void:
 		_poly.color = coat_tint.lerp(Color(0.55, 0.25, 0.65), 0.75)
 	else:
 		_poly.color = coat_tint
+	# placeholder sheet mirrors tint / squash of the old capsule
+	if _sheet != null:
+		_sheet.modulate = _poly.color
+		_sheet.scale = Vector2(_sheet_sc * _poly.scale.x, _sheet_sc * _poly.scale.y)
 
 
 func _say(text: String, color := Color(1.0, 0.85, 0.2)) -> void:

@@ -92,13 +92,56 @@ func _tex_sprite(path: String, scale_f: float, pos: Vector2) -> Sprite2D:
 	return s
 
 
+var _cloud_layer: ParallaxLayer
+
+
 func _build_parallax() -> void:
 	var bg := ParallaxBackground.new()
 	add_child(bg)
-	# inked night set: storm sky -> minaret skyline -> painted Cairo facades
+	# inked night stack: deep storm sky -> drifting cloud sprites ->
+	# minaret skyline -> far block silhouettes -> near keyed facades
 	_layer(bg, 0.04, _tex_sprite(ENV + "night_sky.png", 2.4, Vector2(-1600, -900)), 3302.4)
+	_cloud_layer = _layer(bg, 0.07, _cloud_band(), 1250.0)
 	_layer(bg, 0.16, _tex_sprite(ENV + "skyline_far.png", 1.6, Vector2(-1600, -40)), 3123.2)
-	_layer(bg, 0.34, _tex_sprite(ENV + "facades_strip.png", 1.15, Vector2(-1600, 600.0 - 618.0 * 1.15)), 1582.4)
+	_facade_band(bg, 0.24, ["facades_d"], 0.72, Color(0.46, 0.5, 0.72))
+	_facade_band(bg, 0.34, ["facades_b", "facades_c", "facades_d"], 0.95)
+
+
+## Transparent storm-cloud sprites on their own (slow) layer.
+func _cloud_band() -> Node2D:
+	var holder := Node2D.new()
+	var defs := [
+		["cloud_1", -1500.0, -330.0, 1.5],
+		["cloud_2", -450.0, -400.0, 1.15],
+		["cloud_3", 350.0, -290.0, 1.7],
+	]
+	for d in defs:
+		var s := _tex_sprite(ENV + String(d[0]) + ".png", float(d[3]),
+				Vector2(float(d[1]), float(d[2])))
+		if s.texture == null:
+			continue
+		s.modulate = Color(0.7, 0.76, 1.0)
+		holder.add_child(s)
+	return holder
+
+
+## Bottom-aligned keyed facade strips, concatenated into one endless band.
+func _facade_band(bg: ParallaxBackground, stick: float, names: Array,
+		scale_f: float, tint := Color(1, 1, 1)) -> void:
+	var holder := Node2D.new()
+	var x := -1600.0
+	for n in names:
+		var s := _tex_sprite(ENV + String(n) + ".png", scale_f, Vector2.ZERO)
+		if s.texture == null:
+			continue
+		var tw := float(s.texture.get_width()) * scale_f
+		var th := float(s.texture.get_height()) * scale_f
+		s.position = Vector2(x, GROUND_Y - th)
+		s.modulate = tint
+		holder.add_child(s)
+		x += tw
+	if holder.get_child_count() > 0:
+		_layer(bg, stick, holder, x + 1600.0)
 
 
 ## Ground-anchored env sprite, horizontally centered on cx.
@@ -131,12 +174,13 @@ func _stretch_prop(name: String, x: float, top: float, w: float, h: float, z := 
 	return s
 
 
-func _layer(bg: ParallaxBackground, stick: float, child: Node, mirror_x: float) -> void:
+func _layer(bg: ParallaxBackground, stick: float, child: Node, mirror_x: float) -> ParallaxLayer:
 	var l := ParallaxLayer.new()
 	l.motion_scale = Vector2(stick, 1.0)
 	l.motion_mirroring = Vector2(mirror_x, 0)
 	l.add_child(child)
 	bg.add_child(l)
+	return l
 
 
 func _build_lighting() -> void:
@@ -633,6 +677,9 @@ func _process(delta: float) -> void:
 	# rain rides the camera
 	if _rain != null and _cam != null:
 		_rain.global_position = _cam.global_position + Vector2(0, -320)
+	# storm clouds drift on their own layer
+	if _cloud_layer != null:
+		_cloud_layer.motion_offset.x -= 9.0 * delta
 	# lightning
 	_bolt_timer -= delta
 	if _bolt_timer <= 0.0:

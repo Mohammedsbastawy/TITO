@@ -50,6 +50,10 @@ var _stagger_t := 0.0
 var _flash_t := 0.0
 
 var _visual: Node2D
+var _sheet: Sprite2D
+var _sheet_sc := 1.0
+
+const SHEET_TEX := "res://assets2d/sprites/chars/enforcer_idle.png"
 var _poly: Polygon2D
 var _indicator: Label2D
 var _ind_t := 0.0
@@ -107,6 +111,18 @@ func _build_visual() -> void:
 		Vector2(2, -52), Vector2(8, -52), Vector2(8, -48), Vector2(2, -48)])
 	eye.color = Color(1, 1, 1)
 	_visual.add_child(eye)
+	# placeholder inked sheet until the real animation frames land
+	_sheet = Sprite2D.new()
+	_sheet.texture = load(SHEET_TEX) as Texture2D
+	if _sheet.texture != null:
+		_sheet_sc = 76.0 / float(_sheet.texture.get_height())
+		_sheet.scale = Vector2(_sheet_sc, _sheet_sc)
+		_sheet.centered = false
+		_sheet.position = Vector2(-_sheet.texture.get_width() * _sheet_sc * 0.5, -74.0)
+		_visual.add_child(_sheet)
+		for c in _visual.get_children():
+			if c is Polygon2D:
+				c.visible = false
 
 
 func _build_indicator() -> void:
@@ -412,3 +428,7 @@ func _apply_visual(delta: float) -> void:
 		elif state == State.STAGGER:
 			squash = Vector2(1.15, 0.85)
 		_poly.scale = _poly.scale.lerp(squash, clampf(12.0 * delta, 0.0, 1.0))
+	# placeholder sheet mirrors tint / squash of the old capsule
+	if _sheet != null:
+		_sheet.modulate = _poly.color
+		_sheet.scale = Vector2(_sheet_sc * _poly.scale.x, _sheet_sc * _poly.scale.y)
