@@ -222,7 +222,7 @@ func _try_build_hero_anims() -> bool:
 	var fr := SpriteFrames.new()
 	fr.remove_animation(&"default")
 	var target_h := 0.0
-	var speeds := {&"idle": 12.0, &"run": 15.0, &"sprint": 15.0}
+	var speeds := {&"idle": 6.0, &"run": 12.0, &"sprint": 14.0}
 	for anim in [&"idle", &"run", &"sprint"]:
 		var dir := CHAR_ANIM_DIR + "tito_" + String(anim) + "/"
 		var frames: Array[String] = []
