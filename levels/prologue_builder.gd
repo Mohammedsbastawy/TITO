@@ -183,7 +183,7 @@ func _build_environment() -> void:
 	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
 	env.fog_density = 0.016  # the smog is thick tonight
 	env.fog_light_color = Color(0.08, 0.1, 0.2)
-	env.tonemap_mode = Environment.TONE_MAP_ACES
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
@@ -216,7 +216,7 @@ func _rain_emitter(center: Vector3, extents: Vector3, count: int) -> void:
 	sm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	sm.albedo_color = Color(0.65, 0.75, 0.95, 0.4)
 	streak.material = sm
-	p.draw_pass_1 = streak
+	p.mesh = streak   ## CPUParticles3D uses 'mesh', draw_pass_1 is GPU-only
 	p.position = center
 	add_child(p)
 

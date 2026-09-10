@@ -5,7 +5,7 @@ class_name TitoProjectile
 extends Area3D
 
 @export var speed := 12.0
-@export var gravity := 0.0
+@export var arc_gravity := 0.0   ## renamed: 'gravity' collides with Area3D's own property
 @export var floor_crawl := false
 @export var damage := 1
 @export var life := 5.0
@@ -35,8 +35,8 @@ func launch(from: Vector3, dir: Vector3, spd := -1.0) -> TitoProjectile:
 
 
 func _physics_process(delta: float) -> void:
-	if gravity != 0.0:
-		velocity.y -= gravity * delta
+	if arc_gravity != 0.0:
+		velocity.y -= arc_gravity * delta
 	if floor_crawl:
 		var fy = _floor_under(global_position + Vector3.UP * 0.6)
 		if fy != null:
