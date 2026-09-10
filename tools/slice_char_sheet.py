@@ -25,11 +25,16 @@ def slice_sheet(src: str, frames: int, name: str) -> list[str]:
     hi, wi = a.shape[:2]
     corners = np.concatenate([a[:8, :8].reshape(-1, 4), a[:8, -8:].reshape(-1, 4),
                               a[-8:, :8].reshape(-1, 4), a[-8:, -8:].reshape(-1, 4)])
-    key = np.median(corners, axis=0)[:3]
-    dist = np.sqrt(((a[:, :, :3] - key) ** 2).sum(axis=2))
-    alpha = np.clip((dist - KEY_BLEND_LO) * (255.0 / KEY_BLEND_RANGE), 0, 255)
-    a[:, :, 3] = np.minimum(a[:, :, 3], alpha.astype(np.int16))
-    keyed = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
+    corner_alpha = float(np.median(corners[:, 3]))
+    if corner_alpha < 16.0:
+        # artist's channel is real transparency already — trust it, no keying
+        keyed = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
+    else:
+        key = np.median(corners, axis=0)[:3]
+        dist = np.sqrt(((a[:, :, :3] - key) ** 2).sum(axis=2))
+        alpha = np.clip((dist - KEY_BLEND_LO) * (255.0 / KEY_BLEND_RANGE), 0, 255)
+        a[:, :, 3] = np.minimum(a[:, :, 3], alpha.astype(np.int16))
+        keyed = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGBA')
 
     cw = wi / frames
     crops, maxw, maxh = [], 0, 0
@@ -64,6 +69,11 @@ def slice_sheet(src: str, frames: int, name: str) -> list[str]:
 def _contact(paths: list[str], out: str) -> None:
     cell = 160
     board = Image.new('RGB', (len(paths) * cell, cell + 20), (16, 18, 30))
+    # checkerboard so semi-transparent areas can't hide
+    for y in range(0, cell, 16):
+        for x in range(0, len(paths) * cell, 16):
+            if (x // 16 + y // 16) % 2 == 0:
+                ImageDraw.Draw(board).rectangle([x, y, x + 15, y + 15], fill=(52, 56, 78))
     d = ImageDraw.Draw(board)
     for i, p in enumerate(paths):
         t = Image.open(p).convert('RGBA')
