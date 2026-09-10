@@ -74,6 +74,10 @@ func _ready() -> void:
 	_build_rooftop()
 	_build_weather()
 	_build_gameplay()
+	# ambient life: dust, wind streaks, drifting paper — all ride the camera
+	var fx := AmbientFx2D.new()
+	add_child(fx)
+	fx.follow = _cam
 	_build_prompts()
 
 
