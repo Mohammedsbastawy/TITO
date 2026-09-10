@@ -83,3 +83,9 @@
 - `sentry_*`: idle / walk / shield_bash / hurt / dead
 - `marksman_*`: idle / aim / fire / reload / hurt / dead
 - `raven_*`: idle / walk / cane_combo(×2) / rush / slam / reload_stance / hurt / reversal / dead
+
+---
+
+## تحديث: فورمات المُصدِّر الجديد (2026-09-11)
+الشيتات بقت تتصدّر كـ **2752×1536 PNG شفاف** بتخطيط جريد حر (8 إطارات = صفّين 4×2، 3 إطارات = صف واحد)، الإطارات متباعدة ومش لامسة بعض.
+القاطع الجديد `tools/slice_hero_sheets.py` بيكتشف الصفوف والأعمدة أوتوماتيك، وبيعمل **تطبيع مقاس عالمي** على مرجعية الوقفة (idle ≈ 1268px)، وبيخبّز رفع الرجلين في الجو (jump/fall) جوّه الخلية نفسها — فمفيش أي إعداد يدوي: حط الشيت في `assets2d/gen/chars_raw/` وشغّل السكربت بس.

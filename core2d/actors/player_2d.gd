@@ -51,6 +51,7 @@ var _health: TitoHealth
 
 var _t := 0.0                 # generic per-state timer
 var _run_hold := 0.0
+var _land_t := 0.0
 var _coyote := 0.0
 var _buffer := 0.0
 var _iframes := 0.0
@@ -222,8 +223,10 @@ func _try_build_hero_anims() -> bool:
 	var fr := SpriteFrames.new()
 	fr.remove_animation(&"default")
 	var target_h := 0.0
-	var speeds := {&"idle": 6.0, &"run": 12.0, &"sprint": 14.0}
-	for anim in [&"idle", &"run", &"sprint"]:
+	var speeds := {&"idle": 6.0, &"run": 12.0, &"sprint": 14.0,
+		&"jump": 9.0, &"fall": 7.0, &"land": 11.0}
+	var loops := {&"jump": false, &"land": false}
+	for anim in [&"idle", &"run", &"sprint", &"jump", &"fall", &"land"]:
 		var dir := CHAR_ANIM_DIR + "tito_" + String(anim) + "/"
 		var frames: Array[String] = []
 		for f in ResourceLoader.list_directory(dir):
@@ -233,7 +236,7 @@ func _try_build_hero_anims() -> bool:
 			continue
 		frames.sort()
 		fr.add_animation(anim)
-		fr.set_animation_loop(anim, true)
+		fr.set_animation_loop(anim, bool(loops.get(anim, true)))
 		fr.set_animation_speed(anim, float(speeds.get(anim, 12.0)))
 		for f in frames:
 			var tex := load(dir + f) as Texture2D
@@ -258,9 +261,13 @@ func _sync_hero_anim() -> void:
 	var want := _cur_anim
 	match state:
 		State.IDLE:
-			want = &"idle"
+			want = &"land" if _land_t > 0.0 else &"idle"
 		State.RUN:
 			want = &"sprint" if _run_hold >= sprint_delay else &"run"
+		State.JUMP:
+			want = &"jump"
+		State.FALL:
+			want = &"fall"
 	if want == _cur_anim:
 		return
 	if _heroA.sprite_frames.has_animation(want):
@@ -275,6 +282,7 @@ func _physics_process(delta: float) -> void:
 	_iframes = maxf(_iframes - delta, 0.0)
 	_roll_iframes = maxf(_roll_iframes - delta, 0.0)
 	_air_lock = maxf(_air_lock - delta, 0.0)
+	_land_t = maxf(_land_t - delta, 0.0)
 	_t = maxf(_t - delta, 0.0)
 	if is_on_floor():
 		_coyote = coyote_time
@@ -301,6 +309,7 @@ func _physics_process(delta: float) -> void:
 	# landing
 	if is_on_floor() and _floor_y_before > 340.0 and state in [State.JUMP, State.FALL]:
 		landed.emit(_floor_y_before > 700.0)
+		_land_t = 0.22
 	_apply_visual(delta)
 
 
