@@ -329,6 +329,7 @@ func _respawn() -> void:
 	velocity = Vector2.ZERO
 	_health.hp = hp_max
 	hp = hp_max
+	damaged.emit(0, hp)  # HUD refresh on revive
 	_iframes = 1.2
 	_enter(State.IDLE)
 

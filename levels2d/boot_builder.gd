@@ -175,7 +175,7 @@ func _build_gameplay() -> void:
 		]), Color(0.5, 0.4, 0.25))
 	add_child(ladder)
 
-	# THE STAR
+	# THE STAR + his HUD
 	var tito := Player2D.new()
 	tito.position = Vector2(120.0, GROUND_Y)
 	add_child(tito)
@@ -191,6 +191,21 @@ func _build_gameplay() -> void:
 	hero_light.texture_scale = 1.6
 	hero_light.position = Vector2(0, -34)
 	tito.add_child(hero_light)
+	var hud := VitalityHud.new()
+	add_child(hud)
+	hud.bind(tito)
+
+	# ZONE 2 — two staff tutors guarding the mid-yard
+	_spawn_staff(Vector2(260.0, GROUND_Y), 200.0, 360.0)
+	_spawn_staff(Vector2(640.0, GROUND_Y), 560.0, 740.0)
+
+
+func _spawn_staff(pos: Vector2, min_x: float, max_x: float) -> void:
+	var e := StaffEnforcer.new()
+	e.position = pos  # BEFORE add_child: patrol band is absolute x
+	e.patrol_min_x = min_x
+	e.patrol_max_x = max_x
+	add_child(e)
 
 
 # -------------------------------------------------------------- prompts ---
@@ -221,6 +236,8 @@ func _build_prompts() -> void:
 	_hint(Vector2(1040, 240), "قفزة الحيطة: المس الحيطة في الهوا واضغط قفز", "")
 	_hint(Vector2(60, 300), "ضرب خفيف: J (٣ ورا بعض) · تقيل: K · صدّ: L · دحرجة: Shift",
 		"خفيف: X (٣) · تقيل: Y · صدّ: RB · دحرجة: B")
+	_hint(Vector2(180, 240), "الضربة العلوية ⬇ بطيئة — اضغط L وقتها بالظبط (صدّ!)",
+		"الضربة العلوية ⬇ — RB وقتها بالظبط (صدّ!)", 22, Color(1.0, 0.7, 0.4))
 	_hint(Vector2(1265, 420), "السلّم: W/S أثناء اللمس · قفز للنزول", "")
 	var ih: Node = get_node_or_null("/root/InputHelper")
 	if ih != null:
