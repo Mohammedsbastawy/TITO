@@ -69,8 +69,12 @@ var _visual: Node2D
 var _body_poly: Polygon2D
 var _hero: Sprite2D
 var _hero_sc := 1.0
+var _heroA: AnimatedSprite2D
+var _heroA_sc := 1.0
+var _cur_anim := &""
 
 const HERO_TEX := "res://assets2d/sprites/chars/tito_idle.png"
+const CHAR_ANIM_DIR := "res://assets2d/sprites/chars/anim/"
 var _ring: Polygon2D          # parry flash ring
 var _hitbox: HitBox2D
 var _hit_shape: CollisionShape2D
@@ -188,7 +192,18 @@ func _build_visual() -> void:
 	_ring.polygon = pts
 	_ring.color = Color(0.4, 1.0, 0.95, 0.0)
 	_visual.add_child(_ring)
-	# placeholder inked sheet until the real animation frames land
+	_build_hero()
+
+
+## Animated sheets (assets2d/sprites/chars/anim/tito_<anim>/f_XX.png) win;
+## the single inked placeholder frame is the fallback.
+func _build_hero() -> void:
+	if _try_build_hero_anims():
+		for c in _visual.get_children():
+			if c is Polygon2D and c != _ring:
+				c.visible = false
+		_ring.z_index = 1
+		return
 	_hero = Sprite2D.new()
 	_hero.texture = load(HERO_TEX) as Texture2D
 	if _hero.texture != null:
@@ -201,6 +216,56 @@ func _build_visual() -> void:
 			if c is Polygon2D and c != _ring:
 				c.visible = false
 		_ring.z_index = 1
+
+
+func _try_build_hero_anims() -> bool:
+	var fr := SpriteFrames.new()
+	fr.remove_animation(&"default")
+	var target_h := 0.0
+	var speeds := {&"idle": 12.0, &"run": 15.0, &"sprint": 15.0}
+	for anim in [&"idle", &"run", &"sprint"]:
+		var dir := CHAR_ANIM_DIR + "tito_" + String(anim) + "/"
+		var frames: Array[String] = []
+		for f in ResourceLoader.list_directory(dir):
+			if f.ends_with(".png"):
+				frames.append(f)
+		if frames.is_empty():
+			continue
+		frames.sort()
+		fr.add_animation(anim)
+		fr.set_animation_loop(anim, true)
+		fr.set_animation_speed(anim, float(speeds.get(anim, 12.0)))
+		for f in frames:
+			var tex := load(dir + f) as Texture2D
+			fr.add_frame(anim, tex)
+			target_h = maxf(target_h, float(tex.get_height()))
+	if fr.get_animation_names().size() == 0:
+		return false
+	_heroA = AnimatedSprite2D.new()
+	_heroA.sprite_frames = fr
+	_heroA_sc = 74.0 / target_h
+	_heroA.scale = Vector2(_heroA_sc, _heroA_sc)
+	_heroA.position = Vector2(0, -74.0 * 0.5)  # frames bottom-aligned at feet
+	_visual.add_child(_heroA)
+	_cur_anim = &"idle"
+	if fr.has_animation(&"idle"):
+		_heroA.play(&"idle")
+	return true
+
+
+## Pick the anim for the current state; unmapped states keep the last anim.
+func _sync_hero_anim() -> void:
+	var want := _cur_anim
+	match state:
+		State.IDLE:
+			want = &"idle"
+		State.RUN:
+			want = &"sprint" if _run_hold >= sprint_delay else &"run"
+	if want == _cur_anim:
+		return
+	if _heroA.sprite_frames.has_animation(want):
+		_cur_anim = want
+		_heroA.play(want)
 
 
 # ============================================================ main loop ==
@@ -603,3 +668,10 @@ func _apply_visual(delta: float) -> void:
 		tint.a *= _body_poly.modulate.a
 		_hero.modulate = tint
 		_hero.scale = Vector2(_hero_sc * _body_poly.scale.x, _hero_sc * _body_poly.scale.y)
+	# animated hero: same mirror + state-driven playback
+	if _heroA != null:
+		_sync_hero_anim()
+		var tinta := _body_poly.color
+		tinta.a *= _body_poly.modulate.a
+		_heroA.modulate = tinta
+		_heroA.scale = Vector2(_heroA_sc * _body_poly.scale.x, _heroA_sc * _body_poly.scale.y)
