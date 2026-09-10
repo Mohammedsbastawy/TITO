@@ -6,7 +6,7 @@ placement math so the user can eyeball parallax layers + prop scale before
 running Godot. Window: world x [-160..1460], y [-160..720].
 """
 from pathlib import Path
-from PIL import Image
+from PIL import Image, ImageChops
 
 ROOT = Path(__file__).resolve().parent.parent
 ENV = ROOT / "assets2d" / "sprites" / "env"
@@ -35,9 +35,6 @@ def paste_scaled(name: str, scale: float, x: float, y: float,
             n += 1
 
 
-
-
-
 def ground_prop(name: str, cx: float, target_h: float,
                 ground: float = GROUND_Y, base: Path = ENV) -> None:
     im = Image.open(base / f"{name}.png").convert("RGBA")
@@ -59,7 +56,6 @@ far = Image.open(ENV / "facades_d.png").convert("RGBA")
 fw, fh = int(far.width * 0.72), int(far.height * 0.72)
 far = far.resize((fw, fh), Image.LANCZOS)
 dark = Image.new("RGBA", far.size, (117, 128, 184, 255))
-from PIL import ImageChops
 far = ImageChops.multiply(far, dark)
 canvas.alpha_composite(far, to_canvas(-1600.0, GROUND_Y - fh))
 canvas.alpha_composite(far, to_canvas(-1600.0 + fw, GROUND_Y - fh))

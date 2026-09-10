@@ -30,7 +30,7 @@ SHEETS = {
     'facades_c': {'mode': 'whole'},
     'facades_d': {'mode': 'whole'},
     'chars': {'names': ['tito_idle', 'enforcer_idle', 'raven_idle'],
-              'out': OUT_CHARS, 'erase_ground_line': True},
+              'out': OUT_CHARS, 'erase_ground_line': False},
 }
 BACKDROPS = ['night_sky', 'skyline_far', 'facades_mid', 'street_ground']
 
