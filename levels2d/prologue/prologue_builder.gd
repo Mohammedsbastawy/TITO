@@ -13,6 +13,7 @@
 extends Node2D
 
 const CAIRO := "res://assets/textures/cairo/"
+const ENV := "res://assets2d/sprites/env/"
 const FONT_BOLD := "res://assets/fonts/DejaVuSans-Bold.ttf"
 const LIGHT_DOT := "res://assets2d/fx/light_dot.png"
 const CHAPTER_ONE := "res://levels2d/chapter1/chapter1.tscn"
@@ -94,9 +95,40 @@ func _tex_sprite(path: String, scale_f: float, pos: Vector2) -> Sprite2D:
 func _build_parallax() -> void:
 	var bg := ParallaxBackground.new()
 	add_child(bg)
-	_layer(bg, 0.04, _tex_sprite(CAIRO + "sky.png", 2.4, Vector2(-1200, -500)), 1024.0)
-	_layer(bg, 0.16, _tex_sprite(CAIRO + "skyline_far.png", 1.9, Vector2(-1200, -60)), 650.0)
-	_layer(bg, 0.34, _tex_sprite(CAIRO + "skyline_mid.png", 1.5, Vector2(-1200, 100)), 540.0)
+	# inked night set: storm sky -> minaret skyline -> painted Cairo facades
+	_layer(bg, 0.04, _tex_sprite(ENV + "night_sky.png", 2.4, Vector2(-1600, -900)), 3302.4)
+	_layer(bg, 0.16, _tex_sprite(ENV + "skyline_far.png", 1.6, Vector2(-1600, -40)), 3123.2)
+	_layer(bg, 0.34, _tex_sprite(ENV + "facades_strip.png", 1.15, Vector2(-1600, 600.0 - 618.0 * 1.15)), 1582.4)
+
+
+## Ground-anchored env sprite, horizontally centered on cx.
+func _ground_prop(name: String, cx: float, target_h: float, z := -1,
+		ground := GROUND_Y, tint := Color(1, 1, 1)) -> Sprite2D:
+	var s := _tex_sprite(ENV + name + ".png", 1.0, Vector2.ZERO)
+	if s.texture == null:
+		push_warning("prologue: missing env sprite " + name)
+		return s
+	var th := float(s.texture.get_height())
+	var sc := target_h / th
+	s.scale = Vector2(sc, sc)
+	var tw := float(s.texture.get_width()) * sc
+	s.position = Vector2(cx - tw * 0.5, ground - target_h)
+	s.z_index = z
+	s.modulate = tint
+	add_child(s)
+	return s
+
+
+## Non-uniform stretched env sprite (beams, strips).
+func _stretch_prop(name: String, x: float, top: float, w: float, h: float, z := -1) -> Sprite2D:
+	var s := _tex_sprite(ENV + name + ".png", 1.0, Vector2(x, top))
+	if s.texture == null:
+		push_warning("prologue: missing env sprite " + name)
+		return s
+	s.scale = Vector2(w / float(s.texture.get_width()), h / float(s.texture.get_height()))
+	s.z_index = z
+	add_child(s)
+	return s
 
 
 func _layer(bg: ParallaxBackground, stick: float, child: Node, mirror_x: float) -> void:
@@ -125,13 +157,7 @@ func _build_lighting() -> void:
 
 
 func _lamp(x: float, ground: float) -> void:
-	var post := Polygon2D.new()
-	post.polygon = PackedVector2Array([
-		Vector2(-3, 0), Vector2(3, 0), Vector2(3, -180), Vector2(14, -180),
-		Vector2(14, -171), Vector2(3, -171), Vector2(-3, -171)])
-	post.color = Color(0.10, 0.11, 0.16)
-	post.position = Vector2(x, ground)
-	add_child(post)
+	_ground_prop("lamp_post", x + 7.0, 190.0, -1, ground)
 	var light := PointLight2D.new()
 	light.texture = load(LIGHT_DOT) as Texture2D
 	light.color = Color(1.0, 0.78, 0.45)
@@ -200,22 +226,24 @@ const CONCRETE := Color(0.2, 0.21, 0.27)
 
 
 func _build_street() -> void:
-	_box2d(WORLD_L - 32.0, GROUND_Y, ROOF_EDGE + 60.0, 120.0, ASPHALT)
-	_box2d(WORLD_L - 32.0, GROUND_Y - 8.0, ROOF_EDGE + 60.0, 8.0, CURB)
+	# collision stays, visuals now come from the inked street strip
+	_box2d(WORLD_L - 32.0, GROUND_Y, ROOF_EDGE + 60.0, 120.0, Color(0, 0, 0, 0))
+	_box2d(WORLD_L - 32.0, GROUND_Y - 8.0, ROOF_EDGE + 60.0, 8.0, Color(0, 0, 0, 0))
 	_box2d(WORLD_L - 64.0, 120.0, 32.0, 480.0, BRICK)  # west cap wall
-	# backdrop brick strips behind the street (non-gameplay silhouette)
-	for seg in [[0.0, 700.0, 5.0], [700.0, 1400.0, 6.0], [1400.0, 2100.0, 7.0],
-			[2100.0, 2900.0, 6.0], [2900.0, 3520.0, 6.5]]:
-		var x0: float = seg[0]
-		var x1: float = seg[1]
-		var h: float = seg[2] * 56.0
-		var p := Polygon2D.new()
-		p.polygon = PackedVector2Array([
-			Vector2(x0, GROUND_Y), Vector2(x1, GROUND_Y),
-			Vector2(x1, GROUND_Y - h), Vector2(x0, GROUND_Y - h)])
-		p.color = Color(0.16, 0.15, 0.21)
-		p.z_index = -1
-		add_child(p)
+	# tiled wet-asphalt strip (curb face sits behind the walking line)
+	var strip := load(ENV + "street_flat.png") as Texture2D
+	var strip_s := 0.82
+	var strip_w := 1408.0 * strip_s
+	var strip_top := GROUND_Y - 70.0 * strip_s
+	var tiles := int(ceil((WORLD_R + 320.0) / strip_w)) + 1
+	for i in tiles:
+		var s := Sprite2D.new()
+		s.texture = strip
+		s.scale = Vector2.ONE * strip_s
+		s.centered = false
+		s.position = Vector2(WORLD_L - 96.0 + i * strip_w, strip_top)
+		s.z_index = -2
+		add_child(s)
 
 
 const ROOF_EDGE := 3800.0
@@ -227,19 +255,17 @@ func _build_zone1() -> void:
 	_box2d(300.0, 420.0, 30.0, 180.0, BRICK)
 	_box2d(400.0, 420.0, 30.0, 180.0, BRICK)
 	_box2d(200.0, 414.0, 100.0, 12.0, METAL, true)  # exit ledge on the left tower
-	# slide shutter: masonry frame + 34 px gap under it
-	_box2d(640.0, 486.0, 110.0, 80.0, BRICK)
+	# slide shutter: inked roll-up door w/ real torn gap at its bottom
+	_box2d(640.0, 486.0, 110.0, 80.0, Color(0, 0, 0, 0))
+	_ground_prop("shutter", 695.0, 118.0, -1)
 	_box2d(640.0, 566.0, 110.0, 8.0, Color(0.75, 0.2, 0.15))
-	for i in 3:
-		_poly(PackedVector2Array([
-			Vector2(642.0, 492.0 + i * 22.0), Vector2(748.0, 492.0 + i * 22.0),
-			Vector2(748.0, 500.0 + i * 22.0), Vector2(642.0, 500.0 + i * 22.0),
-		]), Color(0.28, 0.3, 0.38))
 
 
 # ============================================================== ZONE 2 ===
 func _build_zone2() -> void:
-	# cafe awnings as mid cover
+	# cafe fronts; awnings stay as mid cover platforms
+	_ground_prop("cafe_front", 942.0, 158.0, -2)
+	_ground_prop("cafe_front", 1190.0, 152.0, -2)
 	_box2d(880.0, 500.0, 120.0, 10.0, METAL, true)
 	_box2d(1130.0, 500.0, 120.0, 10.0, METAL, true)
 
@@ -247,8 +273,9 @@ func _build_zone2() -> void:
 # ============================================================== ZONE 3 ===
 func _build_zone3() -> void:
 	# sedan: solid shell + BOUNCE roof + headlights at both lanes
-	_box2d(1450.0, 554.0, 110.0, 46.0, Color(0.14, 0.16, 0.24))
-	_box2d(1468.0, 528.0, 74.0, 26.0, Color(0.1, 0.11, 0.17))
+	_box2d(1450.0, 554.0, 110.0, 46.0, Color(0, 0, 0, 0))
+	_box2d(1468.0, 528.0, 74.0, 26.0, Color(0, 0, 0, 0))
+	_ground_prop("sedan_dark", 1505.0, 82.0, -1)
 	var pad := Area2D.new()
 	pad.collision_layer = 64
 	pad.collision_mask = 2
@@ -267,8 +294,9 @@ func _build_zone3() -> void:
 	_poly(PackedVector2Array([Vector2(1552, 566), Vector2(1558, 566), Vector2(1558, 574), Vector2(1552, 574)]),
 		Color(0.9, 0.15, 0.12))
 	# cover van
-	_box2d(1700.0, 516.0, 130.0, 84.0, Color(0.16, 0.18, 0.26))
-	_box2d(1700.0, 506.0, 40.0, 10.0, Color(0.12, 0.13, 0.2))
+	_box2d(1700.0, 516.0, 130.0, 84.0, Color(0, 0, 0, 0))
+	_box2d(1700.0, 506.0, 40.0, 10.0, Color(0, 0, 0, 0))
+	_ground_prop("van", 1765.0, 96.0, -1)
 
 
 # ============================================================== ZONE 4 ===
@@ -283,22 +311,26 @@ func _build_zone4() -> void:
 			Vector2(c[0] + 14, GROUND_Y), Vector2(c[0] + 6, GROUND_Y)]),
 			Color(0.1, 0.1, 0.14))
 	# market stands at street level (visual huts)
-	_box2d(2150.0, 520.0, 90.0, 80.0, Color(0.2, 0.14, 0.12))
-	_box2d(2600.0, 520.0, 90.0, 80.0, Color(0.2, 0.14, 0.12))
+	_box2d(2150.0, 520.0, 90.0, 80.0, Color(0, 0, 0, 0))
+	_ground_prop("crate_stand", 2195.0, 92.0, -1)
+	_box2d(2600.0, 520.0, 90.0, 80.0, Color(0, 0, 0, 0))
+	_ground_prop("market_table", 2645.0, 86.0, -1)
 
 
 # ============================================================== ZONE 5 ===
 func _build_zone5() -> void:
 	# sandbags + striped barriers
-	_box2d(2950.0, 570.0, 70.0, 30.0, SAND)
-	_box2d(2960.0, 552.0, 50.0, 18.0, SAND)
-	_box2d(3120.0, 570.0, 70.0, 30.0, SAND)
+	_box2d(2950.0, 570.0, 70.0, 30.0, Color(0, 0, 0, 0))
+	_box2d(2960.0, 552.0, 50.0, 18.0, Color(0, 0, 0, 0))
+	_ground_prop("sandbags", 2985.0, 50.0, -1)
+	_box2d(3120.0, 570.0, 70.0, 30.0, Color(0, 0, 0, 0))
+	_ground_prop("sandbags", 3155.0, 44.0, -1)
 	for bx in [3050.0, 3240.0]:
-		_box2d(bx, 560.0, 8.0, 40.0, METAL)
-		_box2d(bx + 42.0, 560.0, 8.0, 40.0, METAL)
+		_box2d(bx, 560.0, 8.0, 40.0, Color(0, 0, 0, 0))
+		_box2d(bx + 42.0, 560.0, 8.0, 40.0, Color(0, 0, 0, 0))
 		for i in 2:
-			var mat := Color(0.8, 0.15, 0.12) if i == 0 else Color(0.9, 0.9, 0.92)
-			_box2d(bx, 584.0 - i * 14.0, 50.0, 12.0, mat)
+			_box2d(bx, 584.0 - i * 14.0, 50.0, 12.0, Color(0, 0, 0, 0))
+		_ground_prop("barrier", bx + 25.0, 66.0, -1)
 	# THE GATE: sinks when the squad falls
 	_gate = _box2d(3450.0, 430.0, 55.0, 170.0, METAL)
 	for i in 3:
@@ -322,27 +354,25 @@ func _build_rooftop() -> void:
 	_box2d(4700.0, -140.0, 50.0, 420.0, BRICK)
 	_box2d(ROOF_EDGE, ROOF_Y - 5.0, 950.0, 5.0, CURB)
 	# girders: the only floor the sweep grid respects
-	_box2d(3860.0, 200.0, 240.0, 10.0, METAL)
-	_box2d(4260.0, 200.0, 240.0, 10.0, METAL)
+	_box2d(3860.0, 200.0, 240.0, 10.0, Color(0, 0, 0, 0))
+	_box2d(4260.0, 200.0, 240.0, 10.0, Color(0, 0, 0, 0))
+	_stretch_prop("girder", 3860.0, 200.0, 240.0, 46.0, -1)
+	_stretch_prop("girder", 4260.0, 200.0, 240.0, 46.0, -1)
 	for gx in [3864.0, 4488.0]:
 		_poly(PackedVector2Array([
 			Vector2(gx, 200), Vector2(gx + 6, 200), Vector2(gx + 6, 120), Vector2(gx, 120)]),
 			Color(0.09, 0.1, 0.13))
 	# rooftop dressing: water tank, ACs, antenna
-	_box2d(3900.0, ROOF_Y - 56.0, 64.0, 56.0, Color(0.18, 0.19, 0.24))
-	_box2d(4150.0, ROOF_Y - 34.0, 46.0, 34.0, Color(0.16, 0.17, 0.22))
-	_box2d(4450.0, ROOF_Y - 34.0, 46.0, 34.0, Color(0.16, 0.17, 0.22))
-	_poly(PackedVector2Array([
-		Vector2(4676.0, ROOF_Y), Vector2(4684.0, ROOF_Y),
-		Vector2(4684.0, ROOF_Y - 130.0), Vector2(4676.0, ROOF_Y - 130.0)]), Color(0.08, 0.09, 0.12))
+	_box2d(3900.0, ROOF_Y - 56.0, 64.0, 56.0, Color(0, 0, 0, 0))
+	_ground_prop("water_tank", 3932.0, 66.0, -1, ROOF_Y)
+	_box2d(4150.0, ROOF_Y - 34.0, 46.0, 34.0, Color(0, 0, 0, 0))
+	_ground_prop("ac_unit", 4173.0, 38.0, -1, ROOF_Y)
+	_box2d(4450.0, ROOF_Y - 34.0, 46.0, 34.0, Color(0, 0, 0, 0))
+	_ground_prop("ac_unit", 4473.0, 38.0, -1, ROOF_Y)
+	_ground_prop("antenna", 4680.0, 134.0, -1, ROOF_Y)
 	# floodlight towers with fake cones + real amber pools
 	for fx in [3830.0, 4660.0]:
-		_poly(PackedVector2Array([
-			Vector2(fx, ROOF_Y), Vector2(fx + 6, ROOF_Y),
-			Vector2(fx + 6, ROOF_Y - 170.0), Vector2(fx, ROOF_Y - 170.0)]), Color(0.09, 0.1, 0.13))
-		_poly(PackedVector2Array([
-			Vector2(fx - 14, ROOF_Y - 178), Vector2(fx + 20, ROOF_Y - 178),
-			Vector2(fx + 20, ROOF_Y - 166), Vector2(fx - 14, ROOF_Y - 166)]), Color(1.0, 0.82, 0.5))
+		_ground_prop("floodlight", fx + 3.0, 178.0, -1, ROOF_Y)
 		var cone := Polygon2D.new()
 		cone.polygon = PackedVector2Array([
 			Vector2(fx - 12, ROOF_Y - 166), Vector2(fx + 18, ROOF_Y - 166),
