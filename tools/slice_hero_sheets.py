@@ -80,7 +80,7 @@ def frame_bboxes(alpha: np.ndarray) -> list[tuple[tuple[int, int, int, int], int
     return out
 
 
-def slice_sheet(name: str, h_ref: float, qa: bool) -> dict:
+def slice_sheet(name: str, h_ref: float, cell_h: int, qa: bool) -> dict:
     src = Image.open(RAW / f"{name}.png").convert("RGBA")
     alpha = np.array(src)[:, :, 3]
     if int(alpha[0, 0]) > 16:
@@ -93,8 +93,7 @@ def slice_sheet(name: str, h_ref: float, qa: bool) -> dict:
     widths = [b[0][2] - b[0][0] for b in boxes]
     # 1) head-equalized scale: every animation's head renders at the same size
     k_head = HEAD_PX["tito_idle"] / float(HEAD_PX[name])
-    # 2) cell cap: no animation may render taller than IDLE, or the engine's
-    #    single global scale would shrink the standing character
+    # 2) cell cap: no scaled figure may exceed the uniform cell height
     maxcell = max(b[1] - b[0][1] for b in boxes)  # baseline - top, pre-scale
     k = min(k_head, h_ref / float(maxcell))
     capped = k < k_head
@@ -108,10 +107,13 @@ def slice_sheet(name: str, h_ref: float, qa: bool) -> dict:
     for i, ((x0, y0, x1, y1), baseline) in enumerate(boxes):
         fw, fh = x1 - x0, y1 - y0
         cw = round(fw * k) + PAD * 2
-        ch = round(fh * k) + round((baseline - y1) * k) + PAD * 2
         crop = src.crop((x0, y0, x1, y1)).resize((round(fw * k), round(fh * k)), Image.LANCZOS)
-        cell = Image.new("RGBA", (cw, ch), (0, 0, 0, 0))
-        cell.alpha_composite(crop, (PAD, PAD + round((baseline - y1) * k)))
+        # UNIFORM cell height across ALL anims; the figure's feet sit at the
+        # cell floor (minus its baked air-lift) so the engine's centered draw
+        # never floats or sinks the character
+        cell = Image.new("RGBA", (cw, cell_h), (0, 0, 0, 0))
+        lift = round((baseline - y1) * k)
+        cell.alpha_composite(crop, (PAD, cell_h - PAD - crop.height - lift))
         cell.save(out_dir / f"f_{i:02d}.png")
         cells.append(cell)
 
@@ -146,10 +148,11 @@ def main() -> None:
     # to idle so the standing character always renders at full capsule height
     ref_boxes = frame_bboxes(np.array(Image.open(RAW / "tito_idle.png").convert("RGBA"))[:, :, 3])
     h_ref = float(max(b[1] - b[0][1] for b in ref_boxes))
-    print(f"idle: frames={len(ref_boxes)} k=1.000 (reference, H_CELL={h_ref:.0f})")
-    slice_sheet("tito_idle", h_ref, qa)
+    cell_h = int(round(h_ref)) + PAD * 2  # one cell height for every anim
+    print(f"idle: frames={len(ref_boxes)} k=1.000 (reference, H_CELL={cell_h})")
+    slice_sheet("tito_idle", h_ref, cell_h, qa)
     for name in SHEETS[1:]:
-        slice_sheet(name, h_ref, qa)
+        slice_sheet(name, h_ref, cell_h, qa)
 
 
 if __name__ == "__main__":
