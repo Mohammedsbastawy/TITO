@@ -76,17 +76,38 @@ strip = strip.resize((int(strip.width * ST), int(strip.height * ST)), Image.LANC
 for i in range(4):
     canvas.alpha_composite(strip, to_canvas(-96.0 + i * strip.width, GROUND_Y - 70.0 * ST))
 
+def prop(name: str, cx: float, top: float, target_h: float, base: Path = ENV) -> None:
+    im = Image.open(base / f"{name}.png").convert("RGBA")
+    sc = target_h / im.height
+    im = im.resize((max(1, int(im.width * sc)), max(1, int(target_h))), Image.LANCZOS)
+    canvas.alpha_composite(im, to_canvas(cx - im.width * 0.5, top))
+
+
+def stretch_prop(name: str, x: float, top: float, w: float, h: float, base: Path = ENV) -> None:
+    im = Image.open(base / f"{name}.png").convert("RGBA")
+    im = im.resize((max(1, int(w)), max(1, int(h))), Image.LANCZOS)
+    canvas.alpha_composite(im, to_canvas(x, top))
+
+
 # ---- zone props visible in the window (street zones 1-3) ----
 for lx in (140.0, 640.0, 1160.0):
     ground_prop("lamp_post", lx + 7.0, 190.0)
 ground_prop("shutter", 695.0, 118.0)
+# zone-1 scaffold exit ledge
+stretch_prop("plank", 193.0, 408.0, 128.0, 13.0)
+prop("scaffold_frame", 255.0, 420.0, 180.0)
+# zone-2 cafe street life
 ground_prop("cafe_front", 942.0, 158.0)
 ground_prop("cafe_front", 1190.0, 152.0)
+ground_prop("news_kiosk", 1040.0, 82.0)
+prop("neon_round", 942.0, 418.0, 46.0)
+prop("neon_stack", 1215.0, 380.0, 96.0)
+ground_prop("hose_reel", 769.0, 58.0)
 ground_prop("sedan_dark", 1505.0, 82.0)
 ground_prop("van", 1765.0, 96.0)
 
-# ---- placeholder characters for scale ----
-ground_prop("tito_idle", 760.0, 74.0, base=CHARS)
+# ---- characters for scale (the user's real sliced frames) ----
+ground_prop("f_00", 760.0, 74.0, base=CHARS / "anim" / "tito_idle")
 ground_prop("enforcer_idle", 1150.0, 76.0, base=CHARS)
 
 # ---- night grade + downscale to 1408x768 ----

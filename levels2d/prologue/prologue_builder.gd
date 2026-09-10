@@ -145,8 +145,10 @@ func _facade_band(bg: ParallaxBackground, stick: float, names: Array,
 
 
 ## Ground-anchored env sprite, horizontally centered on cx.
+## NOTE on chopped filenames: "ladder".png is the vertical I-beam column,
+## "plank_stack".png is the leaning ladder, "ibeam_col".png is the plank stack.
 func _ground_prop(name: String, cx: float, target_h: float, z := -1,
-		ground := GROUND_Y, tint := Color(1, 1, 1)) -> Sprite2D:
+		ground := GROUND_Y, tint := Color(1, 1, 1), rot := 0.0) -> Sprite2D:
 	var s := _tex_sprite(ENV + name + ".png", 1.0, Vector2.ZERO)
 	if s.texture == null:
 		push_warning("prologue: missing env sprite " + name)
@@ -158,18 +160,39 @@ func _ground_prop(name: String, cx: float, target_h: float, z := -1,
 	s.position = Vector2(cx - tw * 0.5, ground - target_h)
 	s.z_index = z
 	s.modulate = tint
+	s.rotation = rot
+	add_child(s)
+	return s
+
+
+## Top-anchored env sprite (platforms, awnings, beams), centered on cx.
+func _prop(name: String, cx: float, top: float, target_h: float, z := -1,
+		tint := Color(1, 1, 1), rot := 0.0) -> Sprite2D:
+	var s := _tex_sprite(ENV + name + ".png", 1.0, Vector2.ZERO)
+	if s.texture == null:
+		push_warning("prologue: missing env sprite " + name)
+		return s
+	var sc := target_h / float(s.texture.get_height())
+	s.scale = Vector2(sc, sc)
+	s.centered = false
+	s.position = Vector2(cx - float(s.texture.get_width()) * sc * 0.5, top)
+	s.z_index = z
+	s.modulate = tint
+	s.rotation = rot
 	add_child(s)
 	return s
 
 
 ## Non-uniform stretched env sprite (beams, strips).
-func _stretch_prop(name: String, x: float, top: float, w: float, h: float, z := -1) -> Sprite2D:
+func _stretch_prop(name: String, x: float, top: float, w: float, h: float, z := -1,
+		tint := Color(1, 1, 1)) -> Sprite2D:
 	var s := _tex_sprite(ENV + name + ".png", 1.0, Vector2(x, top))
 	if s.texture == null:
 		push_warning("prologue: missing env sprite " + name)
 		return s
 	s.scale = Vector2(w / float(s.texture.get_width()), h / float(s.texture.get_height()))
 	s.z_index = z
+	s.modulate = tint
 	add_child(s)
 	return s
 
@@ -295,13 +318,16 @@ const ROOF_EDGE := 3800.0
 
 # ============================================================== ZONE 1 ===
 func _build_zone1() -> void:
-	# wall-jump shaft: facade slivers over invisible collision towers
+	# wall-jump shaft: a cramped alley slit between two coherent facades
 	_box2d(300.0, 420.0, 30.0, 180.0, Color(0, 0, 0, 0))
 	_box2d(400.0, 420.0, 30.0, 180.0, Color(0, 0, 0, 0))
-	_box2d(200.0, 414.0, 100.0, 12.0, METAL, true)  # exit ledge on the left tower
+	_box2d(200.0, 414.0, 100.0, 12.0, Color(0, 0, 0, 0), true)  # exit ledge
 	_stretch_prop("facades_strip", 280.0, 360.0, 180.0, 240.0, -2)
 	_stretch_prop("facades_b", 296.0, 400.0, 38.0, 200.0, -1)
-	_stretch_prop("facades_b", 396.0, 400.0, 38.0, 200.0, -1)
+	_stretch_prop("facades_c", 392.0, 400.0, 44.0, 200.0, -1)
+	# the exit ledge is a scaffold plank on a real X-frame
+	_stretch_prop("plank", 193.0, 408.0, 128.0, 13.0, 0)
+	_prop("scaffold_frame", 255.0, 420.0, 180.0, -1)
 	# slide shutter: inked roll-up door w/ real torn gap at its bottom
 	_box2d(640.0, 486.0, 110.0, 80.0, Color(0, 0, 0, 0))
 	_ground_prop("shutter", 695.0, 118.0, -1)
@@ -315,6 +341,11 @@ func _build_zone2() -> void:
 	_ground_prop("cafe_front", 1190.0, 152.0, -2)
 	_box2d(880.0, 500.0, 120.0, 10.0, METAL, true)
 	_box2d(1130.0, 500.0, 120.0, 10.0, METAL, true)
+	# street life: kiosk between the cafes + neon signs on the storefronts
+	_ground_prop("news_kiosk", 1040.0, 82.0, -2)
+	_prop("neon_round", 942.0, 418.0, 46.0, -2)
+	_prop("neon_stack", 1215.0, 380.0, 96.0, -2)
+	_ground_prop("hose_reel", 769.0, 58.0, -1)
 
 
 # ============================================================== ZONE 3 ===
@@ -344,19 +375,31 @@ func _build_zone3() -> void:
 	_box2d(1700.0, 516.0, 130.0, 84.0, Color(0, 0, 0, 0))
 	_box2d(1700.0, 506.0, 40.0, 10.0, Color(0, 0, 0, 0))
 	_ground_prop("van", 1765.0, 96.0, -1)
+	# parked toktok in the alley mouth after the van
+	_ground_prop("toktok", 1892.0, 72.0, -1)
 
 
 # ============================================================== ZONE 4 ===
 func _build_zone4() -> void:
-	# canopy route above the smoke lane
-	var cans := [[1930.0, 2070.0], [2110.0, 2250.0], [2300.0, 2440.0],
-		[2480.0, 2620.0], [2670.0, 2810.0]]
+	# canopy route above the smoke lane.
+	# Every platform is a real striped shop awning, with the shuttered
+	# storefront drawn on the wall behind it and pipe posts to the street.
+	var cans := [[1930.0, 2070.0, "awning_blue"], [2110.0, 2250.0, "awning_green"],
+		[2300.0, 2440.0, "awning_beige"], [2480.0, 2620.0, "wire_banner"],
+		[2670.0, 2810.0, "awning_green"]]
 	for c in cans:
-		_box2d(c[0], 470.0, c[1] - c[0], 10.0, METAL, true)
+		var cx := (c[0] + c[1]) * 0.5
+		_box2d(c[0], 470.0, c[1] - c[0], 10.0, Color(0, 0, 0, 0), true)
+		# shuttered shopfront on the wall behind the awning
+		_stretch_prop("shutter_wide", cx - 78.0, 452.0, 168.0, 148.0, -2,
+			Color(0.55, 0.58, 0.72))
+		# the awning itself: slope + valance hanging past the stand line
+		_stretch_prop(c[2], c[0] - 6.0, 460.0, c[1] - c[0] + 14.0, 54.0, -1)
+		# awning support pipes
 		_poly(PackedVector2Array([
-			Vector2(c[0] + 6, 470), Vector2(c[0] + 14, 470),
-			Vector2(c[0] + 14, GROUND_Y), Vector2(c[0] + 6, GROUND_Y)]),
-			Color(0.1, 0.1, 0.14))
+			Vector2(c[0] + 6, 470), Vector2(c[0] + 13, 470),
+			Vector2(c[0] + 13, GROUND_Y), Vector2(c[0] + 6, GROUND_Y)]),
+			Color(0.07, 0.075, 0.1))
 	# market stands at street level (visual huts)
 	_box2d(2150.0, 520.0, 90.0, 80.0, Color(0, 0, 0, 0))
 	_ground_prop("crate_stand", 2195.0, 92.0, -1)
@@ -378,24 +421,51 @@ func _build_zone5() -> void:
 		for i in 2:
 			_box2d(bx, 584.0 - i * 14.0, 50.0, 12.0, Color(0, 0, 0, 0))
 		_ground_prop("barrier", bx + 25.0, 66.0, -1)
-	# THE GATE: sinks when the squad falls
-	_gate = _box2d(3450.0, 430.0, 55.0, 170.0, METAL)
+	# THE GATE: a welded steel shutter on runners; sinks when the squad falls.
+	# Every visual is parented to the gate body so it travels with the breach tween.
+	_gate = _box2d(3450.0, 430.0, 55.0, 170.0, Color(0, 0, 0, 0))
+	var gate_art := Sprite2D.new()
+	var gtex: Texture2D = load(ENV + "shutter_wide.png")
+	gate_art.texture = gtex
+	gate_art.centered = false
+	gate_art.scale = Vector2(55.0 / gtex.get_width(), 170.0 / gtex.get_height())
+	gate_art.position = Vector2(3450.0, 430.0)
+	gate_art.modulate = Color(0.5, 0.52, 0.62)
+	_gate.add_child(gate_art)
 	for i in 3:
 		var mat := Color(0.8, 0.15, 0.12) if i % 2 == 0 else Color(0.9, 0.9, 0.92)
-		_poly(PackedVector2Array([
+		var stripe := Polygon2D.new()
+		stripe.polygon = PackedVector2Array([
 			Vector2(3452.0, 448.0 + i * 48.0), Vector2(3503.0, 448.0 + i * 48.0),
-			Vector2(3503.0, 464.0 + i * 48.0), Vector2(3452.0, 464.0 + i * 48.0)]), mat)
-	_gate_lamp = _poly(PackedVector2Array([
-		Vector2(3468.0, 420.0), Vector2(3486.0, 420.0),
-		Vector2(3486.0, 428.0), Vector2(3468.0, 428.0)]), Color(0.9, 0.15, 0.12))
+			Vector2(3503.0, 464.0 + i * 48.0), Vector2(3452.0, 464.0 + i * 48.0)])
+		stripe.color = mat
+		_gate.add_child(stripe)
+	_gate_lamp = Polygon2D.new()
+	_gate_lamp.polygon = PackedVector2Array([
+		Vector2(3468.0, 434.0), Vector2(3486.0, 434.0),
+		Vector2(3486.0, 442.0), Vector2(3468.0, 442.0)])
+	_gate_lamp.color = Color(0.9, 0.15, 0.12)
+	_gate.add_child(_gate_lamp)
+	# construction clutter flanking the blockade
+	_ground_prop("ibeam_col", 3392.0, 34.0, -1)
+	_ground_prop("brace", 3360.0, 86.0, -1, 600.0, Color(1, 1, 1), 0.22)
 
 
 # ============================================================= ROOFTOP ===
 func _build_rooftop() -> void:
-	# scaffold zigzag up to ROOF_Y
-	_box2d(3520.0, 520.0, 120.0, 10.0, METAL, true)
-	_box2d(3640.0, 440.0, 120.0, 10.0, METAL, true)
-	_box2d(3520.0, 360.0, 120.0, 10.0, METAL, true)
+	# scaffold zigzag up to ROOF_Y: wood planks on a real two-tower scaffold.
+	_box2d(3520.0, 520.0, 120.0, 10.0, Color(0, 0, 0, 0), true)
+	_box2d(3640.0, 440.0, 120.0, 10.0, Color(0, 0, 0, 0), true)
+	_box2d(3520.0, 360.0, 120.0, 10.0, Color(0, 0, 0, 0), true)
+	# the tall tower carries the 360 and 520 planks, the short one the 440
+	_prop("scaffold_frame", 3570.0, 366.0, 234.0, -2)
+	_prop("scaffold_frame", 3690.0, 446.0, 154.0, -2)
+	# leaning extension ladder ties the zigzag to the street
+	_prop("plank_stack", 3622.0, 378.0, 222.0, -1, Color(1, 1, 1), 0.08)
+	# the planks you actually stand on
+	_stretch_prop("plank", 3512.0, 514.0, 136.0, 15.0, 0)
+	_stretch_prop("plank", 3632.0, 434.0, 136.0, 15.0, 0)
+	_stretch_prop("plank", 3512.0, 354.0, 136.0, 15.0, 0)
 	# the roof slab + backstop wall + parapet lip
 	_box2d(ROOF_EDGE, ROOF_Y, 950.0, 32.0, CONCRETE)
 	_box2d(4700.0, -140.0, 50.0, 420.0, BRICK)
@@ -405,6 +475,9 @@ func _build_rooftop() -> void:
 	_box2d(4260.0, 200.0, 240.0, 10.0, Color(0, 0, 0, 0))
 	_stretch_prop("girder", 3860.0, 200.0, 240.0, 46.0, -1)
 	_stretch_prop("girder", 4260.0, 200.0, 240.0, 46.0, -1)
+	# riveted I-beam columns stand each girder on the roof slab
+	for gx in [3875.0, 4085.0, 4275.0, 4485.0]:
+		_prop("ladder", gx, 210.0, 70.0, -2)
 	for gx in [3864.0, 4488.0]:
 		_poly(PackedVector2Array([
 			Vector2(gx, 200), Vector2(gx + 6, 200), Vector2(gx + 6, 120), Vector2(gx, 120)]),
@@ -412,6 +485,10 @@ func _build_rooftop() -> void:
 	# rooftop dressing: water tank, ACs, antenna
 	_box2d(3900.0, ROOF_Y - 56.0, 64.0, 56.0, Color(0, 0, 0, 0))
 	_ground_prop("water_tank", 3932.0, 66.0, -1, ROOF_Y)
+	# lived-in Cairo roof: pigeon coop, dish farm, hose cabinet
+	_ground_prop("pigeon_coop", 4010.0, 42.0, -2, ROOF_Y)
+	_ground_prop("dish_cluster", 4555.0, 48.0, -2, ROOF_Y)
+	_ground_prop("hose_reel", 4690.0, 56.0, -2, ROOF_Y)
 	_box2d(4150.0, ROOF_Y - 34.0, 46.0, 34.0, Color(0, 0, 0, 0))
 	_ground_prop("ac_unit", 4173.0, 38.0, -1, ROOF_Y)
 	_box2d(4450.0, ROOF_Y - 34.0, 46.0, 34.0, Color(0, 0, 0, 0))
