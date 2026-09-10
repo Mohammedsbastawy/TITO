@@ -388,7 +388,7 @@ func _build_zone4() -> void:
 		[2300.0, 2440.0, "awning_beige"], [2480.0, 2620.0, "wire_banner"],
 		[2670.0, 2810.0, "awning_green"]]
 	for c in cans:
-		var cx := (c[0] + c[1]) * 0.5
+		var cx: float = (c[0] + c[1]) * 0.5
 		_box2d(c[0], 470.0, c[1] - c[0], 10.0, Color(0, 0, 0, 0), true)
 		# shuttered shopfront on the wall behind the awning
 		_stretch_prop("shutter_wide", cx - 78.0, 452.0, 168.0, 148.0, -2,
