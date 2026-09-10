@@ -15,7 +15,7 @@ enum State { STAGGER, IDLE, RUN, JUMP, FALL, WALL_SLIDE, SLIDE, ROLL, PARRY,
 
 # ----------------------------- tuning (plan §2.2) -------------------------
 @export var run_speed := 190.0
-@export var sprint_speed := 290.0
+@export var sprint_speed := 250.0
 @export var sprint_delay := 0.8          # hold-run time before sprint kicks in
 @export var accel_ground := 1400.0
 @export var friction_ground := 1700.0
@@ -23,7 +23,8 @@ enum State { STAGGER, IDLE, RUN, JUMP, FALL, WALL_SLIDE, SLIDE, ROLL, PARRY,
 @export var gravity := 1450.0
 @export var max_fall := 640.0
 @export var jump_speed := 560.0
-@export var jump_cut := 0.4              # velocity kept when jump released
+@export var air_jumps := 1                # extra jumps allowed mid-air (double jump)
+@export var air_jump_mult := 0.92         # double-jump strength vs ground jump
 @export var coyote_time := 0.11
 @export var jump_buffer := 0.12
 @export var slide_boost := 420.0
@@ -52,6 +53,9 @@ var _health: TitoHealth
 var _t := 0.0                 # generic per-state timer
 var _run_hold := 0.0
 var _land_t := 0.0
+var _jumps_left := 1            # air jumps still in the pocket
+var _carry := 0.0               # ground speed kept when going airborne
+var _air_jump_t := 0.0          # >0 briefly after a double jump (anim pick)
 var _coyote := 0.0
 var _buffer := 0.0
 var _iframes := 0.0
@@ -224,9 +228,9 @@ func _try_build_hero_anims() -> bool:
 	fr.remove_animation(&"default")
 	var target_h := 0.0
 	var speeds := {&"idle": 6.0, &"run": 12.0, &"sprint": 14.0,
-		&"jump": 9.0, &"fall": 7.0, &"land": 11.0}
-	var loops := {&"jump": false, &"land": false}
-	for anim in [&"idle", &"run", &"sprint", &"jump", &"fall", &"land"]:
+		&"jump": 9.0, &"jump2": 10.0, &"fall": 7.0, &"land": 11.0}
+	var loops := {&"jump": false, &"jump2": false, &"land": false}
+	for anim in [&"idle", &"run", &"sprint", &"jump", &"jump2", &"fall", &"land"]:
 		var dir := CHAR_ANIM_DIR + "tito_" + String(anim) + "/"
 		var frames: Array[String] = []
 		for f in ResourceLoader.list_directory(dir):
@@ -266,6 +270,8 @@ func _sync_hero_anim() -> void:
 			want = &"sprint" if _run_hold >= sprint_delay else &"run"
 		State.JUMP:
 			want = &"jump"
+			if _air_jump_t > 0.0 and _heroA.sprite_frames.has_animation(&"jump2"):
+				want = &"jump2"
 		State.FALL:
 			want = &"fall"
 	if want == _cur_anim:
@@ -283,9 +289,12 @@ func _physics_process(delta: float) -> void:
 	_roll_iframes = maxf(_roll_iframes - delta, 0.0)
 	_air_lock = maxf(_air_lock - delta, 0.0)
 	_land_t = maxf(_land_t - delta, 0.0)
+	_air_jump_t = maxf(_air_jump_t - delta, 0.0)
 	_t = maxf(_t - delta, 0.0)
 	if is_on_floor():
 		_coyote = coyote_time
+		_jumps_left = air_jumps      # touching ground restocks the double jump
+		_carry = absf(velocity.x)    # remember ground speed for air momentum
 	if Input.is_action_just_pressed(&"jump"):
 		_buffer = jump_buffer
 
@@ -334,6 +343,7 @@ func _request_jump(force := false) -> bool:
 	if _buffer > 0.0 and (_coyote > 0.0 or force):
 		_buffer = 0.0
 		_coyote = 0.0
+		_jumps_left = air_jumps          # ground jump spent; air jumps remain
 		velocity.y = -jump_speed
 		_enter(State.JUMP)
 		return true
@@ -342,8 +352,6 @@ func _request_jump(force := false) -> bool:
 
 func _apply_gravity(delta: float, cap := max_fall) -> void:
 	velocity.y = minf(velocity.y + gravity * delta, cap)
-	if Input.is_action_just_released(&"jump") and velocity.y < 0.0:
-		velocity.y *= jump_cut
 
 
 func _face_input(ax: float) -> void:
@@ -483,9 +491,22 @@ func _do_air(delta: float) -> void:
 	if _request_jump():
 		return  # buffered/coyote jump still counts mid-air
 	var ax := _axis()
+	# DOUBLE JUMP: fresh press past the coyote window, stock left
+	if Input.is_action_just_pressed(&"jump") and _jumps_left > 0 and not _intro_lock:
+		_jumps_left -= 1
+		_air_jump_t = 0.4
+		velocity.y = -jump_speed * air_jump_mult
+		_enter(State.JUMP)
+		if _heroA != null:
+			var anim: StringName = &"jump2" if _heroA.sprite_frames.has_animation(&"jump2") else &"jump"
+			_cur_anim = anim
+			_heroA.play(anim)
+		_face_input(ax)
 	if _air_lock <= 0.0:
 		_face_input(ax)
-		velocity.x = move_toward(velocity.x, ax * run_speed, accel_air * delta)
+		# keep the run/sprint speed you launched with instead of hard-capping
+		var top: float = maxf(run_speed, _carry) if absf(ax) > 0.1 else run_speed
+		velocity.x = move_toward(velocity.x, ax * top, accel_air * delta)
 	_apply_gravity(delta)
 	var want_air := State.FALL if velocity.y > 0.0 else State.JUMP
 	if state != want_air:
@@ -518,6 +539,8 @@ func _do_wall_slide(delta: float) -> void:
 		velocity = Vector2(nx * wall_jump_push, -wall_jump_up)
 		facing = int(signf(nx))
 		_air_lock = wall_lock
+		_jumps_left = air_jumps  # wall-kick restocks the double jump
+		_carry = absf(velocity.x)
 		_enter(State.JUMP)
 		return
 	if is_on_floor():
