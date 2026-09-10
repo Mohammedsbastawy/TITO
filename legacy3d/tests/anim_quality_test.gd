@@ -6,7 +6,7 @@ extends SceneTree
 var fails := 0
 
 func _initialize() -> void:
-	var packed: PackedScene = load("res://levels/mission1.tscn")
+	var packed: PackedScene = load("res://legacy3d/levels/mission1.tscn")
 	var world: Node = packed.instantiate()
 	root.add_child(world)
 	for i in 20:

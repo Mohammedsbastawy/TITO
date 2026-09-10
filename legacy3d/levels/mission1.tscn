@@ -1,11 +1,11 @@
 [gd_scene load_steps=27 format=3]
 
-[ext_resource type="PackedScene" path="res://player/tito.tscn" id="1_tito"]
-[ext_resource type="PackedScene" path="res://enemies/enemy.tscn" id="2_enemy"]
-[ext_resource type="PackedScene" path="res://world/rope.tscn" id="3_rope"]
-[ext_resource type="PackedScene" path="res://world/checkpoint.tscn" id="4_cp"]
-[ext_resource type="PackedScene" path="res://world/endzone.tscn" id="5_end"]
-[ext_resource type="PackedScene" path="res://world/deathzone.tscn" id="6_death"]
+[ext_resource type="PackedScene" path="res://legacy3d/player/tito.tscn" id="1_tito"]
+[ext_resource type="PackedScene" path="res://legacy3d/enemies/enemy.tscn" id="2_enemy"]
+[ext_resource type="PackedScene" path="res://legacy3d/world/rope.tscn" id="3_rope"]
+[ext_resource type="PackedScene" path="res://legacy3d/world/checkpoint.tscn" id="4_cp"]
+[ext_resource type="PackedScene" path="res://legacy3d/world/endzone.tscn" id="5_end"]
+[ext_resource type="PackedScene" path="res://legacy3d/world/deathzone.tscn" id="6_death"]
 
 [sub_resource type="StandardMaterial3D" id="mat_ground"]
 albedo_color = Color(0.2, 0.22, 0.3, 1)

@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=3]
 
-[ext_resource type="Script" path="res://player/tito_body.gd" id="1_body"]
+[ext_resource type="Script" path="res://legacy3d/player/tito_body.gd" id="1_body"]
 [ext_resource type="PackedScene" path="res://assets/models/TITO/Breathing Idle.fbx" id="2_model"]
 [ext_resource type="Script" path="res://combat/tito_health.gd" id="3_hp"]
 [ext_resource type="AnimationLibrary" path="res://assets/models/TITO/anim_library.res" id="4_lib"]

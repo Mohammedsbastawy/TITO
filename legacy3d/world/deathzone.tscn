@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3]
 
-[ext_resource type="Script" path="res://world/tito_deathzone.gd" id="1_death"]
+[ext_resource type="Script" path="res://legacy3d/world/tito_deathzone.gd" id="1_death"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_death"]
 size = Vector3(120, 2, 12)

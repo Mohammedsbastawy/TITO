@@ -8,7 +8,7 @@ var world: Node
 
 
 func _ready() -> void:
-	var packed: PackedScene = load("res://levels/mission1.tscn")
+	var packed: PackedScene = load("res://legacy3d/levels/mission1.tscn")
 	if packed == null:
 		print("FAIL  could not load mission1")
 		_finish()

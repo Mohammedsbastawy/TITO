@@ -36,7 +36,7 @@ func _begin_strike() -> void:
 	var vx := (to.x - from.x) / t
 	var vy := (to.y - from.y) / t + 0.5 * lob_gravity * t
 	var can := TitoProjectile.new()
-	can.gravity = lob_gravity
+	can.fall_gravity = lob_gravity
 	can.floor_crawl = false
 	can.damage = 0            # the canister itself is harmless; the cloud is not
 	can.makes_smoke = true

@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://world/tito_checkpoint.gd" id="1_cp"]
+[ext_resource type="Script" path="res://legacy3d/world/tito_checkpoint.gd" id="1_cp"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_cp"]
 size = Vector3(1.5, 3, 1.5)

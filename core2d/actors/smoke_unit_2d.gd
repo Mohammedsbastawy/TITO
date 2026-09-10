@@ -35,7 +35,7 @@ func _begin_strike() -> void:
 	var vx := (to.x - from.x) / t
 	var vy := (to.y - from.y) / t - 0.5 * lob_gravity * t
 	var can := Projectile2D.new()
-	can.gravity = lob_gravity
+	can.fall_gravity = lob_gravity
 	can.damage = 0             # the tin is harmless; the cloud is not
 	can.makes_hazard = true
 	can.hazard_duration = 7.0

@@ -56,7 +56,7 @@ var _sheet_sc := 1.0
 
 const SHEET_TEX := "res://assets2d/sprites/chars/raven_idle.png"
 var _poly: Polygon2D
-var _indicator: Label2D
+var _indicator: Label
 var _ind_t := 0.0
 var _panels: Array[Polygon2D] = []
 var _health: TitoHealth
@@ -125,9 +125,9 @@ func _build_visual() -> void:
 		for c in _visual.get_children():
 			if c is Polygon2D:
 				c.visible = false
-	_indicator = Label2D.new()
-	_indicator.font = load(FONT_BOLD) as Font
-	_indicator.font_size = 30
+	_indicator = Label.new()
+	_indicator.add_theme_font_override("font", load(FONT_BOLD) as Font)
+	_indicator.add_theme_font_size_override("font_size", 30)
 	_indicator.position = Vector2(-8, -112)
 	_indicator.visible = false
 	add_child(_indicator)

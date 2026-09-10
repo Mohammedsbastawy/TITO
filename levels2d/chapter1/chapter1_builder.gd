@@ -32,24 +32,24 @@ func _ready() -> void:
 	gp.color = Color(0.13, 0.15, 0.24)
 	add_child(gp)
 	# title card
-	var title := Label2D.new()
+	var title := Label.new()
 	title.text = "الفصل الأول — وسط البلد"
-	title.font = load(FONT_BOLD) as Font
-	title.font_size = 64
+	title.add_theme_font_override("font", load(FONT_BOLD) as Font)
+	title.add_theme_font_size_override("font_size", 64)
 	title.modulate = Color(1.0, 0.85, 0.55)
 	title.position = Vector2(300, 240)
 	add_child(title)
-	var sub := Label2D.new()
+	var sub := Label.new()
 	sub.text = "CHAPTER 1 — DOWNTOWN  ·  the day it all truly began"
-	sub.font = load(FONT_BOLD) as Font
-	sub.font_size = 22
+	sub.add_theme_font_override("font", load(FONT_BOLD) as Font)
+	sub.add_theme_font_size_override("font_size", 22)
 	sub.modulate = Color(0.7, 0.8, 1.0)
 	sub.position = Vector2(304, 320)
 	add_child(sub)
-	var soon := Label2D.new()
+	var soon := Label.new()
 	soon.text = "(إعادة بناء الحي بالكامل — المرحلة الجاية)"
-	soon.font = load(FONT_BOLD) as Font
-	soon.font_size = 20
+	soon.add_theme_font_override("font", load(FONT_BOLD) as Font)
+	soon.add_theme_font_size_override("font_size", 20)
 	soon.modulate = Color(0.55, 0.6, 0.75)
 	soon.position = Vector2(304, 360)
 	add_child(soon)

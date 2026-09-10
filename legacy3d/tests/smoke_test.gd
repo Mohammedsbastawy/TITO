@@ -7,9 +7,9 @@ var fails: PackedStringArray = []
 
 
 func _ready() -> void:
-	var packed: PackedScene = load("res://levels/main.tscn")
+	var packed: PackedScene = load("res://legacy3d/levels/main.tscn")
 	if packed == null:
-		print("FAIL  could not load res://levels/main.tscn")
+		print("FAIL  could not load res://legacy3d/levels/main.tscn")
 		get_tree().quit(1)
 		return
 	var world: Node = packed.instantiate()

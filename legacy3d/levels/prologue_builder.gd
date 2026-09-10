@@ -22,18 +22,18 @@ extends Node3D
 const PRO := "res://assets/textures/prologue/"
 const CAIRO := "res://assets/textures/cairo/"
 const FONT_BOLD := "res://assets/fonts/DejaVuSans-Bold.ttf"
-const ENEMY: PackedScene = preload("res://enemies/enemy.tscn")
-const SHIELD := preload("res://enemies/shield_enforcer.gd")
-const AGENT := preload("res://enemies/tactical_agent.gd")
-const LAUNCHER := preload("res://enemies/smoke_launcher.gd")
-const CHECKPOINT: PackedScene = preload("res://world/checkpoint.tscn")
-const DEATHZONE: PackedScene = preload("res://world/deathzone.tscn")
-const TITO: PackedScene = preload("res://player/tito.tscn")
-const PARALLAX := preload("res://world/parallax_layer.gd")
+const ENEMY: PackedScene = preload("res://legacy3d/enemies/enemy.tscn")
+const SHIELD := preload("res://legacy3d/enemies/shield_enforcer.gd")
+const AGENT := preload("res://legacy3d/enemies/tactical_agent.gd")
+const LAUNCHER := preload("res://legacy3d/enemies/smoke_launcher.gd")
+const CHECKPOINT: PackedScene = preload("res://legacy3d/world/checkpoint.tscn")
+const DEATHZONE: PackedScene = preload("res://legacy3d/world/deathzone.tscn")
+const TITO: PackedScene = preload("res://legacy3d/player/tito.tscn")
+const PARALLAX := preload("res://legacy3d/world/parallax_layer.gd")
 
 const ARENA_MIN := 117.0
 const ARENA_MAX := 143.0
-const CHAPTER_ONE := "res://levels/cairo_night.tscn"
+const CHAPTER_ONE := "res://legacy3d/levels/cairo_night.tscn"
 
 # user-supplied dialogue, verbatim (AR + EN)
 const LINES_INTRO := [
@@ -183,7 +183,7 @@ func _build_environment() -> void:
 	env.fog_mode = Environment.FOG_MODE_EXPONENTIAL
 	env.fog_density = 0.016  # the smog is thick tonight
 	env.fog_light_color = Color(0.08, 0.1, 0.2)
-	env.tonemap_mode = Environment.TONE_MAP_ACES
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)

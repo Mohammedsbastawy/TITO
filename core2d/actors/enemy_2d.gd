@@ -55,7 +55,7 @@ var _sheet_sc := 1.0
 
 const SHEET_TEX := "res://assets2d/sprites/chars/enforcer_idle.png"
 var _poly: Polygon2D
-var _indicator: Label2D
+var _indicator: Label
 var _ind_t := 0.0
 var _hitbox: HitBox2D
 var _hit_shape: CollisionShape2D
@@ -126,9 +126,9 @@ func _build_visual() -> void:
 
 
 func _build_indicator() -> void:
-	_indicator = Label2D.new()
-	_indicator.font = load(FONT_BOLD) as Font
-	_indicator.font_size = 26
+	_indicator = Label.new()
+	_indicator.add_theme_font_override("font", load(FONT_BOLD) as Font)
+	_indicator.add_theme_font_size_override("font_size", 26)
 	_indicator.position = Vector2(-6, -84)
 	_indicator.visible = false
 	add_child(_indicator)

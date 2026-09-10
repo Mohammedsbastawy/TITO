@@ -7,7 +7,7 @@ var fails := 0
 
 func _initialize() -> void:
 	# ---- Scenario A: library loop modes (the root cause of the stick)
-	var packed: PackedScene = load("res://levels/mission1.tscn")
+	var packed: PackedScene = load("res://legacy3d/levels/mission1.tscn")
 	var world: Node = packed.instantiate()
 	root.add_child(world)
 	for i in 20:

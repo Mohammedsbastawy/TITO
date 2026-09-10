@@ -1,6 +1,6 @@
 [gd_scene load_steps=5 format=3]
 
-[ext_resource type="Script" path="res://world/tito_rope.gd" id="1_rope"]
+[ext_resource type="Script" path="res://legacy3d/world/tito_rope.gd" id="1_rope"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_rope"]
 size = Vector3(0.8, 7, 0.8)

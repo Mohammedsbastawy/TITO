@@ -700,10 +700,10 @@ func _process(delta: float) -> void:
 # =============================================================== prompts ===
 func _hint(x: float, y: float, kb: String, pad: String,
 		tint := Color(0.85, 0.9, 1.0), size := 20) -> void:
-	var lbl := Label2D.new()
+	var lbl := Label.new()
 	lbl.text = kb
-	lbl.font = load(FONT_BOLD) as Font
-	lbl.font_size = size
+	lbl.add_theme_font_override("font", load(FONT_BOLD) as Font)
+	lbl.add_theme_font_size_override("font_size", size)
 	lbl.modulate = tint
 	lbl.position = Vector2(x, y)
 	add_child(lbl)
@@ -713,7 +713,7 @@ func _hint(x: float, y: float, kb: String, pad: String,
 func _refresh_hints(device: String) -> void:
 	var gamepad := device in ["xbox", "playstation", "switch", "steamdeck", "generic"]
 	for h in _hints:
-		(h[0] as Label2D).text = h[2] if gamepad and h[2] != "" else h[1]
+		(h[0] as Label).text = h[2] if gamepad and h[2] != "" else h[1]
 
 
 func _build_prompts() -> void:

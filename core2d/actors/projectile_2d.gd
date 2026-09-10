@@ -5,7 +5,7 @@ class_name Projectile2D
 extends Area2D
 
 @export var speed := 380.0
-@export var gravity := 0.0
+@export var fall_gravity := 0.0
 @export var damage := 1
 @export var life := 3.0
 @export var makes_hazard := false
@@ -44,8 +44,8 @@ func launch(from: Vector2, dir: Vector2, spd := -1.0) -> Projectile2D:
 
 
 func _physics_process(delta: float) -> void:
-	if gravity != 0.0:
-		velocity.y += gravity * delta
+	if fall_gravity != 0.0:
+		velocity.y += fall_gravity * delta
 	global_position += velocity * delta
 	if _body != null and velocity.length() > 1.0:
 		_body.rotation = velocity.angle()

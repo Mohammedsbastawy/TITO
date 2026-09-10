@@ -10,13 +10,13 @@ extends Node3D
 
 const TEX := "res://assets/textures/cairo/"
 const FONT_BOLD := "res://assets/fonts/DejaVuSans-Bold.ttf"
-const ENEMY: PackedScene = preload("res://enemies/enemy.tscn")
-const ROPE: PackedScene = preload("res://world/rope.tscn")
-const CHECKPOINT: PackedScene = preload("res://world/checkpoint.tscn")
-const ENDZONE: PackedScene = preload("res://world/endzone.tscn")
-const DEATHZONE: PackedScene = preload("res://world/deathzone.tscn")
-const TITO: PackedScene = preload("res://player/tito.tscn")
-const PARALLAX := preload("res://world/parallax_layer.gd")
+const ENEMY: PackedScene = preload("res://legacy3d/enemies/enemy.tscn")
+const ROPE: PackedScene = preload("res://legacy3d/world/rope.tscn")
+const CHECKPOINT: PackedScene = preload("res://legacy3d/world/checkpoint.tscn")
+const ENDZONE: PackedScene = preload("res://legacy3d/world/endzone.tscn")
+const DEATHZONE: PackedScene = preload("res://legacy3d/world/deathzone.tscn")
+const TITO: PackedScene = preload("res://legacy3d/player/tito.tscn")
+const PARALLAX := preload("res://legacy3d/world/parallax_layer.gd")
 
 var _mats: Dictionary = {}
 

@@ -211,10 +211,10 @@ func _spawn_staff(pos: Vector2, min_x: float, max_x: float) -> void:
 # -------------------------------------------------------------- prompts ---
 func _hint(pos: Vector2, kb: String, pad: String, size := 22,
 		tint := Color(0.85, 0.9, 1.0)) -> void:
-	var lbl := Label2D.new()
+	var lbl := Label.new()
 	lbl.text = kb
-	lbl.font = load(FONT_BOLD) as Font
-	lbl.font_size = size
+	lbl.add_theme_font_override("font", load(FONT_BOLD) as Font)
+	lbl.add_theme_font_size_override("font_size", size)
 	lbl.modulate = tint
 	lbl.position = pos
 	add_child(lbl)
@@ -224,7 +224,7 @@ func _hint(pos: Vector2, kb: String, pad: String, size := 22,
 func _refresh_hints(device: String) -> void:
 	var gamepad := device in ["xbox", "playstation", "switch", "steamdeck", "generic"]
 	for h in _hints:
-		(h[0] as Label2D).text = h[2] if gamepad else h[1]
+		(h[0] as Label).text = h[2] if gamepad else h[1]
 
 
 func _build_prompts() -> void:
@@ -245,4 +245,4 @@ func _build_prompts() -> void:
 		_refresh_hints(str(ih.get("device")))
 	for h in _hints:
 		if h[2] == "":
-			(h[0] as Label2D).text = h[1]
+			(h[0] as Label).text = h[1]
