@@ -34,6 +34,18 @@ SHEETS = ["tito_idle", "tito_run", "tito_sprint", "tito_jump", "tito_fall", "tit
 ALPHA_T = 24
 PAD = 4
 
+## Crown->chin height in SOURCE px, measured per sheet (head is the only
+## pose-invariant bodypart: run/sprint are exported ~30% smaller, and the
+## eye reads "same character size" from equal head size, not cell height).
+HEAD_PX = {
+    "tito_idle": 127,
+    "tito_run": 97,
+    "tito_sprint": 104,
+    "tito_jump": 130,
+    "tito_fall": 115,
+    "tito_land": 115,
+}
+
 
 def runs_1d(mask: np.ndarray) -> list[tuple[int, int]]:
     runs, s = [], None
@@ -48,17 +60,24 @@ def runs_1d(mask: np.ndarray) -> list[tuple[int, int]]:
     return runs
 
 
-def frame_bboxes(alpha: np.ndarray) -> list[tuple[int, int, int, int]]:
-    """Tight bboxes (x0, y0, x1, y1) in reading order across row bands."""
+def frame_bboxes(alpha: np.ndarray) -> list[tuple[tuple[int, int, int, int], int]]:
+    """Tight bboxes (x0, y0, x1, y1) in reading order across row bands,
+    each paired with its OWN band's ground baseline (multi-row sheets!)."""
     ink = alpha >= ALPHA_T
-    boxes: list[tuple[int, int, int, int]] = []
+    out: list[tuple[tuple[int, int, int, int], int]] = []
     for r0, r1 in runs_1d(ink.max(axis=1)):
         band = ink[r0:r1]
-        for c0, c1 in runs_1d(band.max(axis=0)):
+        cols = runs_1d(band.max(axis=0))
+        band_baseline = r0
+        boxes = []
+        for c0, c1 in cols:
             sub = ink[r0:r1, c0:c1]
             ys = np.where(sub.max(axis=1))[0]
-            boxes.append((c0, r0 + int(ys.min()), c1, r0 + int(ys.max()) + 1))
-    return boxes
+            box = (c0, r0 + int(ys.min()), c1, r0 + int(ys.max()) + 1)
+            band_baseline = max(band_baseline, box[3])
+            boxes.append(box)
+        out.extend((b, band_baseline) for b in boxes)
+    return out
 
 
 def slice_sheet(name: str, h_ref: float, qa: bool) -> dict:
@@ -70,11 +89,15 @@ def slice_sheet(name: str, h_ref: float, qa: bool) -> dict:
     if not boxes:
         raise SystemExit(f"{name}: no ink found")
 
-    heights = [b[3] - b[1] for b in boxes]
-    widths = [b[2] - b[0] for b in boxes]
-    baseline = max(b[3] for b in boxes)
-    headroom = max((b[3] - b[1]) + (baseline - b[3]) for b in boxes)
-    k = h_ref / float(headroom)
+    heights = [b[0][3] - b[0][1] for b in boxes]
+    widths = [b[0][2] - b[0][0] for b in boxes]
+    # 1) head-equalized scale: every animation's head renders at the same size
+    k_head = HEAD_PX["tito_idle"] / float(HEAD_PX[name])
+    # 2) cell cap: no animation may render taller than IDLE, or the engine's
+    #    single global scale would shrink the standing character
+    maxcell = max(b[1] - b[0][1] for b in boxes)  # baseline - top, pre-scale
+    k = min(k_head, h_ref / float(maxcell))
+    capped = k < k_head
 
     out_dir = OUT / name
     if out_dir.exists():
@@ -82,7 +105,7 @@ def slice_sheet(name: str, h_ref: float, qa: bool) -> dict:
     out_dir.mkdir(parents=True)
 
     cells = []
-    for i, (x0, y0, x1, y1) in enumerate(boxes):
+    for i, ((x0, y0, x1, y1), baseline) in enumerate(boxes):
         fw, fh = x1 - x0, y1 - y0
         cw = round(fw * k) + PAD * 2
         ch = round(fh * k) + round((baseline - y1) * k) + PAD * 2
@@ -92,7 +115,7 @@ def slice_sheet(name: str, h_ref: float, qa: bool) -> dict:
         cell.save(out_dir / f"f_{i:02d}.png")
         cells.append(cell)
 
-    print(f"{name}: frames={len(boxes)} k={k:.3f} "
+    print(f"{name}: frames={len(boxes)} k={k:.3f}{' (cell-capped)' if capped else ''} "
           f"tight=({min(widths)}..{max(widths)}x{min(heights)}..{max(heights)}) "
           f"cell~{cells[0].size} -> {out_dir.relative_to(ROOT)}")
 
@@ -119,10 +142,13 @@ def slice_sheet(name: str, h_ref: float, qa: bool) -> dict:
 
 def main() -> None:
     qa = "--qa" in sys.argv
+    # the engine uses ONE global scale driven by the tallest cell; anchor it
+    # to idle so the standing character always renders at full capsule height
     ref_boxes = frame_bboxes(np.array(Image.open(RAW / "tito_idle.png").convert("RGBA"))[:, :, 3])
-    h_ref = float(np.median([b[3] - b[1] for b in ref_boxes]))
-    print(f"H_REF (idle median tight height) = {h_ref:.0f}px")
-    for name in SHEETS:
+    h_ref = float(max(b[1] - b[0][1] for b in ref_boxes))
+    print(f"idle: frames={len(ref_boxes)} k=1.000 (reference, H_CELL={h_ref:.0f})")
+    slice_sheet("tito_idle", h_ref, qa)
+    for name in SHEETS[1:]:
         slice_sheet(name, h_ref, qa)
 
 
