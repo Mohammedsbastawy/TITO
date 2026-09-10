@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Tito"
-run/main_scene="res://levels/cairo_night.tscn"
+run/main_scene="res://levels/prologue_escape.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
