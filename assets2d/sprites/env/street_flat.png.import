@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://ddixs2ish5bi6"
-path="res://.godot/imported/update.svg-3137f1f7d53c08c0ae65aabe138d898b.ctex"
+uid="uid://c4b7iu3l23blw"
+path="res://.godot/imported/street_flat.png-2612f4bdb21d4f338acaa96c604b993b.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://addons/input_helper/assets/update.svg"
-dest_files=["res://.godot/imported/update.svg-3137f1f7d53c08c0ae65aabe138d898b.ctex"]
+source_file="res://assets2d/sprites/env/street_flat.png"
+dest_files=["res://.godot/imported/street_flat.png-2612f4bdb21d4f338acaa96c604b993b.ctex"]
 
 [params]
 
@@ -38,6 +38,3 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
-svg/scale=1.0
-editor/scale_with_editor_scale=false
-editor/convert_colors_with_editor_theme=false
