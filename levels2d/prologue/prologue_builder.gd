@@ -295,10 +295,13 @@ const ROOF_EDGE := 3800.0
 
 # ============================================================== ZONE 1 ===
 func _build_zone1() -> void:
-	# wall-jump shaft: two brick towers, 70 px throat
-	_box2d(300.0, 420.0, 30.0, 180.0, BRICK)
-	_box2d(400.0, 420.0, 30.0, 180.0, BRICK)
+	# wall-jump shaft: facade slivers over invisible collision towers
+	_box2d(300.0, 420.0, 30.0, 180.0, Color(0, 0, 0, 0))
+	_box2d(400.0, 420.0, 30.0, 180.0, Color(0, 0, 0, 0))
 	_box2d(200.0, 414.0, 100.0, 12.0, METAL, true)  # exit ledge on the left tower
+	_stretch_prop("facades_strip", 280.0, 360.0, 180.0, 240.0, -2)
+	_stretch_prop("facades_b", 296.0, 400.0, 38.0, 200.0, -1)
+	_stretch_prop("facades_b", 396.0, 400.0, 38.0, 200.0, -1)
 	# slide shutter: inked roll-up door w/ real torn gap at its bottom
 	_box2d(640.0, 486.0, 110.0, 80.0, Color(0, 0, 0, 0))
 	_ground_prop("shutter", 695.0, 118.0, -1)
