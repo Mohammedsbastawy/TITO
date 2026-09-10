@@ -582,6 +582,9 @@ func _breach_gate() -> void:
 	if _gate == null:
 		return
 	_gate_lamp.material_override = _mats["gate_g"]
+	var ih := get_node_or_null("/root/InputHelper")
+	if ih != null and ih.has_method("rumble_medium"):
+		ih.rumble_medium()  # the street shakes as the gate sinks
 	var tw := create_tween()
 	tw.tween_property(_gate, "position:y", _gate.position.y - 4.6, 1.6) \
 		.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
@@ -648,7 +651,10 @@ func _spawn_scene(scene: PackedScene, pos: Vector3, props := {}) -> Node3D:
 
 
 # ---------------------------------------------------------------- labels --
-func _label(text: String, pos: Vector3, size: int, tint: Color) -> void:
+var _hints: Array = []  # [Label3D, kb_text, xbox_text, ps_text]
+
+
+func _label(text: String, pos: Vector3, size: int, tint: Color) -> Label3D:
 	var l := Label3D.new()
 	l.text = text
 	l.font = load(FONT_BOLD) as Font
@@ -658,18 +664,56 @@ func _label(text: String, pos: Vector3, size: int, tint: Color) -> void:
 	l.outline_modulate = Color(0, 0, 0, 0.85)
 	l.position = pos
 	add_child(l)
+	return l
+
+
+## Hint label that rewords itself when the player swaps keyboard <-> gamepad
+## (Input Helper autoload does the device detection; we just listen).
+func _hint_label(kb: String, xb: String, ps: String, pos: Vector3, size: int, tint: Color) -> void:
+	var l := _label(kb, pos, size, tint)
+	_hints.append([l, kb, xb, ps])
+
+
+func _refresh_hints(device: String) -> void:
+	for h in _hints:
+		match device:
+			"xbox", "switch", "steamdeck", "generic":
+				(h[0] as Label3D).text = h[2]
+			"playstation":
+				(h[0] as Label3D).text = h[3]
+			_:
+				(h[0] as Label3D).text = h[1]
+
+
+func _refresh_hints_unbound(device: String, _index: int) -> void:
+	_refresh_hints(device)
+
+
+func _setup_device_hints() -> void:
+	var ih: Node = get_node_or_null("/root/InputHelper")
+	if ih == null:
+		return
+	ih.device_changed.connect(_refresh_hints_unbound)
+	_refresh_hints(str(ih.get("device")))
 
 
 func _build_labels() -> void:
 	_label("الهروب — ليلة البداية", Vector3(-7.0, 3.6, -0.6), 120, Color(1.0, 0.8, 0.5))
-	_label("A/D حركة · SPACE قفز · J ضرب · CTRL زحف", Vector3(-7.0, 2.6, -0.6), 52, Color(0.7, 0.8, 1.0))
-	_label("اتزحلق تحت الشتر: CTRL", Vector3(12.0, 3.8, -0.5), 60, Color(1.0, 0.85, 0.5))
-	_label("اضرب: J", Vector3(21.0, 3.2, -0.5), 64, Color(1.0, 0.85, 0.5))
+	_hint_label("A/D حركة · SPACE قفز · J ضرب · CTRL زحف",
+		"عصا شمال حركة · A قفز · X ضرب · B زحف",
+		"عصا شمال حركة · إكس قفز · مربع ضرب · دايرة زحف",
+		Vector3(-7.0, 2.6, -0.6), 52, Color(0.7, 0.8, 1.0))
+	_hint_label("اتزحلق تحت الشتر: CTRL", "اتزحلق تحت الشتر: B", "اتزحلق تحت الشتر: دايرة",
+		Vector3(12.0, 3.8, -0.5), 60, Color(1.0, 0.85, 0.5))
+	_hint_label("اضرب: J", "اضرب: X", "اضرب: مربع",
+		Vector3(21.0, 3.2, -0.5), 64, Color(1.0, 0.85, 0.5))
 	_label("الدرع بيصد من قدام — ادخل من وراه!", Vector3(45.0, 4.2, -0.5), 56, Color(1.0, 0.6, 0.4))
 	_label("الدخان بيحرق.. كمّل فوق المظلات!", Vector3(63.0, 4.6, -0.5), 56, Color(0.75, 0.9, 1.0))
-	_label("الخط الأحمر = انزل على الأرض: CTRL", Vector3(76.0, 4.6, -0.5), 52, Color(1.0, 0.55, 0.45))
+	_hint_label("الخط الأحمر = انزل على الأرض: CTRL", "الخط الأحمر = انزل على الأرض: B", "الخط الأحمر = انزل على الأرض: دايرة",
+		Vector3(76.0, 4.6, -0.5), 52, Color(1.0, 0.55, 0.45))
 	_label("اقضي على الفرقة عشان البوابة تفتح", Vector3(92.0, 4.8, -0.5), 56, Color(1.0, 0.85, 0.5))
 	_label("السطح فوق — الحديد هو أمانك من المسح", Vector3(117.0, 13.4, -0.5), 48, Color(0.8, 0.85, 1.0))
+	_setup_device_hints()
 
 
 # ------------------------------------------------------ cinematic overlay -

@@ -910,6 +910,9 @@ func take_damage(amount: int, from_pos = null) -> void:
 	_health.take_damage(amount)
 	_flash_t = 0.15
 	_squash_t = 0.10
+	var ih := get_node_or_null("/root/InputHelper")
+	if ih != null and ih.has_method("rumble_small"):
+		ih.rumble_small()  # punch feedback on gamepad
 	# died -> _on_died ran synchronously and set DEAD; never un-die.
 	if state == State.DEAD:
 		return

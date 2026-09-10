@@ -320,6 +320,9 @@ func take_damage(amount: int, from_pos = null) -> void:
 		return
 	_invuln = invulnerability_time
 	_flash_timer = invulnerability_time * 0.75
+	var ih := get_node_or_null("/root/InputHelper")
+	if ih != null and ih.has_method("rumble_medium"):
+		ih.rumble_medium()  # getting hit on a gamepad should FEEL like it
 	# hit knockback: shove away from the source (unless hanging on a rope)
 	if from_pos is Vector3 and state != State.CLIMB:
 		var kb := signf(global_position.x - (from_pos as Vector3).x)

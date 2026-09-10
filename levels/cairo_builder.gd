@@ -378,7 +378,10 @@ func _build_gameplay() -> void:
 
 
 # ---------------------------------------------------------------- labels --
-func _label(text: String, pos: Vector3, size: int, tint: Color) -> void:
+var _controls_label: Label3D
+
+
+func _label(text: String, pos: Vector3, size: int, tint: Color) -> Label3D:
 	var l := Label3D.new()
 	l.text = text
 	l.font = load(FONT_BOLD) as Font
@@ -388,10 +391,32 @@ func _label(text: String, pos: Vector3, size: int, tint: Color) -> void:
 	l.outline_modulate = Color(0, 0, 0, 0.85)
 	l.position = pos
 	add_child(l)
+	return l
+
+
+func _apply_controls_text(device: String) -> void:
+	if _controls_label == null:
+		return
+	match device:
+		"xbox", "switch", "steamdeck", "generic":
+			_controls_label.text = "LEFT STICK / D-PAD move · A jump · B or STICK DOWN crawl · X punch"
+		"playstation":
+			_controls_label.text = "LEFT STICK move · CROSS jump · CIRCLE or STICK DOWN crawl · SQUARE punch"
+		_:
+			_controls_label.text = "A/D move · SPACE jump · CTRL crawl · W/S rope · J punch"
+
+
+func _setup_device_hints() -> void:
+	var ih: Node = get_node_or_null("/root/InputHelper")
+	if ih == null:
+		return
+	ih.device_changed.connect(func(d: String, _i: int) -> void: _apply_controls_text(d))
+	_apply_controls_text(str(ih.get("device")))
 
 
 func _build_labels() -> void:
 	_label("وسط البلد — القاهرة", Vector3(4.0, 3.4, -0.6), 128, Color(1.0, 0.85, 0.55))
 	_label("منتصف الليل · ليلة الهروب", Vector3(4.0, 2.5, -0.6), 56, Color(0.75, 0.85, 1.0))
-	_label("A/D move · SPACE jump · CTRL crawl · W/S rope · J punch", \
+	_controls_label = _label("A/D move · SPACE jump · CTRL crawl · W/S rope · J punch", \
 		Vector3(4.0, 1.9, -0.6), 40, Color(0.6, 0.65, 0.8))
+	_setup_device_hints()

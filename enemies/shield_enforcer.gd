@@ -63,6 +63,9 @@ func _block_hit() -> void:
 	# bright clang flash, tiny shove back — and he stays mad
 	_flash_t = 0.09
 	_squash_t = 0.07
+	var ih := get_node_or_null("/root/InputHelper")
+	if ih != null and ih.has_method("rumble_small"):
+		ih.rumble_small()  # you feel the shield CLANG
 	velocity.x = -_dir * 1.8
 	if is_instance_valid(_player):
 		_last_seen = _player.global_position

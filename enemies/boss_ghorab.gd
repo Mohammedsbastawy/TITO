@@ -520,8 +520,11 @@ func take_damage(amount: int, from_pos = null) -> void:
 		state = St.GRAB_DASH
 		_timer = 0.35
 		return
+	var ih := get_node_or_null("/root/InputHelper")
 	hp -= amount
 	_flash_t = 0.12
+	if ih != null and ih.has_method("rumble_small"):
+		ih.rumble_small()
 	if _hp_fg != null:
 		var f := clampf(float(hp) / max_hp, 0.0, 1.0)
 		_hp_fg.scale.x = f
@@ -553,6 +556,9 @@ func _die() -> void:
 	if _indicator != null:
 		_indicator.visible = false
 	set_physics_process(false)
+	var ih := get_node_or_null("/root/InputHelper")
+	if ih != null and ih.has_method("rumble_large"):
+		ih.rumble_large()  # the Raven falls, the pad rumbles
 	boss_died.emit(self)
 
 
