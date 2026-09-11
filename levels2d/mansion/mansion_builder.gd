@@ -201,13 +201,36 @@ func _build_parallax() -> void:
 	add_child(bg)
 	_layer(bg, 0.04, _tex_sprite(ENV + "night_sky.png", 2.4, Vector2(-1600, -900)), 3302.4)
 	for spec in [["cloud_1", -1500.0, -330.0, 1.5], ["cloud_2", -450.0, -400.0, 1.15],
-			["cloud_3", 350.0, -290.0, 1.7]]:
+				["cloud_3", 350.0, -290.0, 1.7]]:
 		_layer(bg, 0.1, _tex_sprite(ENV + spec[0] + ".png", spec[3], Vector2(spec[1], spec[2])), 1900.0)
 	_layer(bg, 0.16, _tex_sprite(ENV + "skyline_far.png", 1.6, Vector2(-1600, -40)), 3123.2)
-	# estate enclosure silhouette (dark facades doubling as perimeter walls)
-	var wall := _tex_sprite(ENV + "facades_d.png", 1.5, Vector2(-1600, 8))
-	wall.modulate = Color(0.35, 0.38, 0.55)
-	_layer(bg, 0.72, wall, 2332.5)
+	# moonlit tree band drifting behind the estate garden (no street facades!)
+	var trees := _tex_sprite(ENV + "tree_line_sheet.png", 1.0, Vector2(-400, 300))
+	var tsc := 1.4
+	trees.scale = Vector2(tsc, tsc)
+	trees.modulate = Color(0.5, 0.55, 0.8)
+	_layer(bg, 0.34, trees, 4200.0)
+	# ---- FOREGROUND occluders (fast layer, sparse so it never annoys) ----
+	for fx in [1750.0, 2620.0, 3440.0, 4150.0]:
+		var col := _tex_sprite(ENV + "column_tall.png", 1.0, Vector2.ZERO)
+		if col.texture == null:
+			break
+		var csc := 900.0 / float(col.texture.get_height())
+		col.scale = Vector2(csc, csc)
+		col.centered = false
+		col.position = Vector2(fx, -140.0)
+		col.modulate = Color(0.16, 0.17, 0.26, 0.92)
+		_layer(bg, 1.14, col, 0.0)
+	for fx in [260.0, 1240.0]:
+		var pot := _tex_sprite(ENV + "plant_pot.png", 1.0, Vector2.ZERO)
+		if pot.texture == null:
+			break
+		var psc := 380.0 / float(pot.texture.get_height())
+		pot.scale = Vector2(psc, psc)
+		pot.centered = false
+		pot.position = Vector2(fx, 470.0)
+		pot.modulate = Color(0.14, 0.2, 0.15, 0.9)
+		_layer(bg, 1.14, pot, 0.0)
 
 
 func _build_lighting() -> void:
@@ -221,8 +244,11 @@ func _build_zone1() -> void:
 	# lawn baseline + wild grass fringe + the estate boundary wall behind
 	_poly(PackedVector2Array([Vector2(0, GROUND_Y), Vector2(1560, GROUND_Y),
 		Vector2(1560, 636), Vector2(0, 636)]), LAWN, -3)
+	# world never shows beyond its bounds: dark earth/void under everything
+	_poly(PackedVector2Array([Vector2(-200, 636), Vector2(4700, 636),
+		Vector2(4700, 860), Vector2(-200, 860)]), Color(0.03, 0.03, 0.06), -9)
 	_box2d(0.0, 600.0, 1600.0, 36.0, Color(0, 0, 0, 0))
-	for wx in range(60, 1560, 250):
+	for wx in range(60, 1560, 176):
 		_ground_prop("wall_stone", wx, 118.0, -3, 600.0, Color(0.55, 0.58, 0.72))
 	for gx in range(60, 1560, 195):
 		_ground_prop("grass_strip", gx, 26.0, -1)
@@ -267,6 +293,8 @@ func _build_zone1() -> void:
 	_ground_prop("trellis", 1441.0, 186.0, -2)
 	_box2d(1380.0, 420.0, 190.0, 14.0, WOOD, true)  # garage roof (one-way up)
 	_hint(1380.0, 470.0, "اطلع العريشة (سهم لفوق على السلم)")
+	# lone sentry walking the lawn between the two searchlight cones
+	_spawn_enemy(StaffEnforcer.new(), Vector2(860.0, GROUND_Y), 760.0, 980.0)
 
 
 # ========================================================= ZONE 2 : breach =
@@ -308,6 +336,15 @@ func _build_zone3() -> void:
 	_stretch_prop("stairs_marble", 2450.0, 380.0, 182.0, 220.0, -2)
 	# mezzanine slab (zones 4-6 all run on it, out to the terrace edge)
 	_box2d(1750.0, 380.0, 2550.0, 16.0, LIME)
+	# gallery of stolen moments: gilt paintings over the hall, rafters overhead
+	var arts := ["painting_portrait", "painting_landscape", "painting_stilllife"]
+	var pi := 0
+	for px in [2080.0, 2560.0, 3040.0, 3920.0]:
+		_prop_centered(arts[pi % 3], px, 208.0, 116.0, -4)
+		pi += 1
+	for bx in range(1780, 4300, 340):
+		_poly(PackedVector2Array([Vector2(bx, 150), Vector2(bx + 18, 150),
+			Vector2(bx + 18, 188), Vector2(bx, 188)]), Color(0.16, 0.13, 0.11), -3)
 	# red runner carpet along the whole hall
 	for rx in range(1800, 2860, 132):
 		_stretch_prop("rug_strip", rx, 368.0, 130.0, 12.0, -2)
@@ -389,6 +426,8 @@ func _build_zone6() -> void:
 	_poly(PackedVector2Array([Vector2(4290, 640), Vector2(4450, 640),
 		Vector2(4450, 720), Vector2(4290, 720)]), Color(0.05, 0.12, 0.24), -2)
 	_lamp(4220.0, 320.0, Color(1.0, 0.75, 0.45), 1.4, 2.6)
+	# terrace watcher: the last pair of eyes before the canal jump
+	_spawn_enemy(ShieldSentry.new(), Vector2(4000.0, MEZZ_Y), 3900.0, 4140.0)
 	_trigger(4240.0, 300.0, 46.0, 90.0, _on_balcony_body)
 
 
@@ -551,9 +590,11 @@ func _breach_impact(van: Node2D) -> void:
 	_box2d(1580.0, 470.0, 60.0, 130.0, Color(0.45, 0.4, 0.35))
 	_box2d(1640.0, 420.0, 70.0, 180.0, Color(0.5, 0.44, 0.37))
 	_box2d(1710.0, 380.0, 44.0, 220.0, Color(0.55, 0.5, 0.43))
-	# guards deploy from the wreck
+	# guards deploy split: one patrols the floor, one takes the mezzanine
 	_spawn_enemy(StaffEnforcer.new(), Vector2(1900.0, GROUND_Y), 1810.0, 2150.0)
-	_spawn_enemy(ShieldSentry.new(), Vector2(2280.0, GROUND_Y), 2180.0, 2430.0)
+	_spawn_enemy(ShieldSentry.new(), Vector2(2280.0, MEZZ_Y), 2080.0, 2500.0)
+	# late straggler storms in through the gates: nowhere to go back to
+	_spawn_enemy(StaffEnforcer.new(), Vector2(1690.0, GROUND_Y), 1640.0, 1990.0)
 	_hint(1770.0, 330.0, "اقتحام! اطلع الرامبة للميزانين")
 
 
@@ -594,11 +635,11 @@ func _on_ambush_body(body: Node2D) -> void:
 	var ih := get_node_or_null("/root/InputHelper")
 	if ih != null and ih.has_method("rumble_medium"):
 		ih.rumble_medium()
-	# the squad rappels in
+	# the squad rappels in — spread wide, each holding its own pocket
 	_track_squad(_spawn_enemy(StaffEnforcer.new(), Vector2(3280.0, MEZZ_Y), 3200.0, 3420.0))
-	_track_squad(_spawn_enemy(ShieldSentry.new(), Vector2(3450.0, MEZZ_Y), 3360.0, 3580.0))
-	_track_squad(_spawn_enemy(Marksman2D.new(), Vector2(3660.0, MEZZ_Y), 3580.0, 3780.0))
-	_track_squad(_spawn_enemy(StaffEnforcer.new(), Vector2(3760.0, MEZZ_Y), 3680.0, 3840.0))
+	_track_squad(_spawn_enemy(ShieldSentry.new(), Vector2(3520.0, MEZZ_Y), 3460.0, 3640.0))
+	_track_squad(_spawn_enemy(Marksman2D.new(), Vector2(3725.0, MEZZ_Y), 3640.0, 3820.0))
+	_track_squad(_spawn_enemy(StaffEnforcer.new(), Vector2(3825.0, MEZZ_Y), 3760.0, 3850.0))
 
 
 func _on_balcony_body(body: Node2D) -> void:

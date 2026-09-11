@@ -91,11 +91,19 @@ def main():
               "plant_pot", "french_window", "table_flipped", "balustrade",
               "hose_reel", "facade_strip", "entrance_arch", "balcony",
               "window_shutter", "cornice", "carriage_lamp", "roofline",
-              "iron_gate", "floor_planks"]:
+              "iron_gate", "floor_planks", "tree_line_sheet",
+              "painting_portrait", "painting_landscape", "painting_stilllife"]:
         try:
             sprites[n] = load(n)
         except OSError:
             sprites[n] = None
+
+    # moonlit tree band + dark earth cover (no street facades anywhere)
+    if sprites["tree_line_sheet"] is not None:
+        tb = sprites["tree_line_sheet"].resize((4200, 260), Image.LANCZOS)
+        tb = tint(tb, 0.5, 0.55, 0.8)
+        cv.paste(tb, (-100, 300 + OY - 260), tb)
+    rect(cv, -200, 636, 4900, 224, (5, 5, 10))
 
     # ================= ZONE 1 : garden =================================
     rect(cv, 0, 600, 1560, 40, (22, 38, 24))
@@ -168,6 +176,12 @@ def main():
     # ================= ZONE 3 : hall ===================================
     # cornice crowning the hall walls + under-mezz detailing
     stamp_xy(cv, sprites["cornice"], 1560, 148, 2990, 22, (0.85, 0.85, 0.95))
+    # gilt paintings + ceiling rafters give the hall its rhythm
+    arts = ["painting_portrait", "painting_landscape", "painting_stilllife"]
+    for pi, px in enumerate([2080, 2560, 3040, 3920]):
+        stamp(cv, sprites[arts[pi % 3]], px, 324, 116, (0.85, 0.85, 0.9))
+    for bx in range(1780, 4300, 340):
+        rect(cv, bx, 150, 18, 38, (28, 23, 19))
     for cx in [2000, 2400, 2780]:
         stamp(cv, sprites["window_shutter"], cx, 604, 128, (0.9, 0.9, 1.0))
     stamp_xy(cv, sprites["floor_planks"], 1560, 602, 2990, 14, (1.0, 0.92, 0.8))
@@ -227,11 +241,38 @@ def main():
         sil = Image.new("RGBA", (ew, eh), (12, 14, 22, 255))
         ea = enf.resize((ew, eh), Image.LANCZOS).getchannel("A")
         sil.putalpha(ea)
-        for px, py in [(3210, 380), (3430, 380), (3720, 380),
-                       (1470, 600), (1518, 600), (1560, 600)]:
+        # spread-out beats: lawn sentry, breach squad, mezz + sunroom pockets,
+        # terrace watcher — mirrors the in-engine spawn layout
+        for px, py in [(860, 600), (1690, 600), (1900, 600), (2280, 380),
+                       (1470, 600), (1518, 600),
+                       (3280, 380), (3520, 380), (3725, 380), (3825, 380),
+                       (4000, 380)]:
             cv.paste(sil, (px - ew // 2, py + OY - eh), sil)
     except OSError:
         pass
+
+    # ---- FOREGROUND occluders: near-camera columns/plants, crisp & dark ---
+    def fg_stamp(name, cx, base, h):
+        s = sprites.get(name)
+        if s is None:
+            return
+        w = int(s.width * (h / s.height))
+        t = s.resize((max(w, 1), h), Image.LANCZOS)
+        t = tint(t, 0.16, 0.17, 0.26)
+        a = t.getchannel("A").point(lambda v: min(int(v * 0.92), 255))
+        t.putalpha(a)
+        lay = Image.new("RGBA", cv.size, (0, 0, 0, 0))
+        lay.paste(t, (int(cx - w / 2), int(base + OY - h)), t)
+        return lay
+
+    for fx in [1750, 2620, 3440, 4150]:
+        lay = fg_stamp("column_tall", fx, 760, 900)
+        if lay is not None:
+            cv = Image.alpha_composite(cv, lay)
+    for fx in [260, 1240]:
+        lay = fg_stamp("plant_pot", fx, 850, 380)
+        if lay is not None:
+            cv = Image.alpha_composite(cv, lay)
 
     # ================= drizzle over garden + terrace ===================
     rnd = random.Random(9)
