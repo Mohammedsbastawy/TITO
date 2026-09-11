@@ -209,22 +209,30 @@ func _build_lighting() -> void:
 
 # ========================================================= ZONE 1 : garden =
 func _build_zone1() -> void:
-	# lawn baseline
+	# lawn baseline + wild grass fringe + the estate boundary wall behind
 	_poly(PackedVector2Array([Vector2(0, GROUND_Y), Vector2(1560, GROUND_Y),
 		Vector2(1560, 636), Vector2(0, 636)]), LAWN, -3)
 	_box2d(0.0, 600.0, 1600.0, 36.0, Color(0, 0, 0, 0))
+	for wx in range(60, 1560, 250):
+		_ground_prop("wall_stone", wx, 118.0, -3, 600.0, Color(0.55, 0.58, 0.72))
+	for gx in range(60, 1560, 195):
+		_ground_prop("grass_strip", gx, 26.0, -1)
 	# trash container -> wall-kick the 3.5 m perimeter wall
-	_box2d(420.0, 540.0, 90.0, 60.0, Color(0.22, 0.26, 0.3))
-	_box2d(480.0, 390.0, 22.0, 210.0, STONE)
+	_box2d(420.0, 540.0, 90.0, 60.0, Color(0, 0, 0, 0))
+	_ground_prop("trash_bin", 465.0, 92.0, -1)
+	_box2d(480.0, 390.0, 22.0, 210.0, Color(0, 0, 0, 0))
+	_prop_centered("wall_stone", 491.0, 388.0, 62.0, -1)
+	_poly(PackedVector2Array([Vector2(484, 452), Vector2(498, 452),
+		Vector2(498, 600), Vector2(484, 600)]), Color(0.4, 0.39, 0.35), -1)
 	_hint(340.0, 470.0, "من على الصندوق: نط + نطّ حيطة فوق السور")
-	# hedge labyrinth with crawl gaps (slide!)
+	# hedge labyrinth: sculpted arches with crawl tunnels (slide!)
 	for hx in [700.0, 980.0]:
-		_box2d(hx, 504.0, 130.0, 46.0, HEDGE)  # hanging mass, gap under -> zahle2a
-		_poly(PackedVector2Array([Vector2(hx - 6, 500), Vector2(hx + 136, 500),
-			Vector2(hx + 136, 512), Vector2(hx - 6, 512)]), Color(0.1, 0.24, 0.13))
+		_box2d(hx, 506.0, 100.0, 44.0, Color(0, 0, 0, 0))
+		_ground_prop("hedge_arch", hx + 50.0, 96.0, -1)
 	_hint(720.0, 560.0, "زحلقة تحت السياج (اتحداك تعدّي الكشاف)")
-	# searchlight cones sweeping the lawn (visual, tilted)
+	# searchlights sweeping the lawn
 	for sx in [820.0, 1130.0]:
+		_ground_prop("searchlight_pole", sx, 122.0, -2)
 		var cone := Polygon2D.new()
 		cone.polygon = PackedVector2Array([
 			Vector2(0, 0), Vector2(64, 0), Vector2(150, 220), Vector2(-70, 220)])
@@ -234,11 +242,9 @@ func _build_zone1() -> void:
 		add_child(cone)
 		_lamp(sx + 30, 326, Color(1.0, 0.95, 0.6), 1.2, 2.2)
 	# dry marble fountain (vault the rims)
-	_box2d(1180.0, 568.0, 26.0, 32.0, MARBLE)
-	_box2d(1314.0, 568.0, 26.0, 32.0, MARBLE)
-	_poly(PackedVector2Array([Vector2(1206, 588), Vector2(1314, 588),
-		Vector2(1314, 604), Vector2(1206, 604)]), Color(0.35, 0.42, 0.5), -2)
-	_prop_centered("hose_reel", 1260.0, 560.0, 44.0)
+	_box2d(1180.0, 568.0, 26.0, 32.0, Color(0, 0, 0, 0))
+	_box2d(1314.0, 568.0, 26.0, 32.0, Color(0, 0, 0, 0))
+	_ground_prop("fountain_dry", 1260.0, 112.0, -1)
 	_hint(1210.0, 520.0, "جري + نط فوق حرف النافورة")
 	# wooden trellis climb -> garage roof
 	var lad := Ladder2D.new()
@@ -249,8 +255,7 @@ func _build_zone1() -> void:
 	lcs.shape = lrect
 	lad.add_child(lcs)
 	add_child(lad)
-	_poly(PackedVector2Array([Vector2(1420, 420), Vector2(1462, 420),
-		Vector2(1462, 606), Vector2(1420, 606)]), Color(0.3, 0.22, 0.13, 0.6), -2)
+	_ground_prop("trellis", 1441.0, 186.0, -2)
 	_box2d(1380.0, 420.0, 190.0, 14.0, WOOD, true)  # garage roof (one-way up)
 	_hint(1380.0, 470.0, "اطلع العريشة (سهم لفوق على السلم)")
 
@@ -260,6 +265,9 @@ func _build_zone2() -> void:
 	# mansion facade: left wall over the door gate
 	_poly(PackedVector2Array([Vector2(1560, 170.0), Vector2(1905, 170.0),
 		Vector2(1905, 230.0), Vector2(1560, 230.0)]), LIME, 0)
+	# the very doors the squad will ram through
+	_ground_prop("doors_mahogany", 1568.0, 188.0, -2, 600.0)
+	_prop_centered("column_tall", 1686.0, 150.0, 452.0, -2)
 	# the doors will be rammed; keep the gate open until the breach seals it
 	_box2d(1560.0, 600.0, 350.0, 36.0, Color(0, 0, 0, 0))  # foyer floor
 	_trigger(1640.0, 470.0, 60.0, 130.0, _on_breach_body)
@@ -270,21 +278,23 @@ func _build_zone2() -> void:
 func _build_zone3() -> void:
 	_box2d(1910.0, 600.0, 700.0, 36.0, Color(0, 0, 0, 0))
 	# chandelier pass (one-way hoop until a real pendulum lands)
-	_poly(PackedVector2Array([Vector2(2210, 170), Vector2(2214, 170),
-		Vector2(2214, 292), Vector2(2210, 292)]), Color(0.6, 0.5, 0.25))
+	_prop_centered("chandelier", 2212.0, 150.0, 162.0, -1)
 	_box2d(2168.0, 290.0, 88.0, 10.0, Color(0.66, 0.55, 0.28), true)
 	_lamp(2212.0, 300.0, Color(1.0, 0.8, 0.45), 2.0, 2.6)
 	_hint(2130.0, 340.0, "من الميزانين انط على النجفة تعدّي بسرعة")
-	# marble steps up to the mezzanine
+	# marble steps up to the mezzanine (art under the collision)
 	for i in 4:
 		_box2d(2450.0 + i * 45.0, 600.0 - 55.0 * (i + 1), 45.0, 55.0 * (i + 1), MARBLE)
+	_stretch_prop("stairs_marble", 2450.0, 380.0, 182.0, 220.0, -2)
 	# mezzanine slab (zones 4-6 all run on it, out to the terrace edge)
 	_box2d(1750.0, 380.0, 2550.0, 16.0, LIME)
+	# red runner carpet along the whole hall
+	for rx in range(1800, 2860, 132):
+		_stretch_prop("rug_strip", rx, 368.0, 130.0, 12.0, -2)
 	# wall sconces down the hall
 	for wx in [1850.0, 2300.0, 2900.0, 3500.0, 4100.0]:
 		_lamp(wx, 300.0, Color(1.0, 0.75, 0.4), 1.5, 2.4)
-		_poly(PackedVector2Array([Vector2(wx - 5, 306), Vector2(wx + 5, 306),
-			Vector2(wx + 3, 316), Vector2(wx - 3, 316)]), Color(0.5, 0.4, 0.22))
+		_prop_centered("sconce", wx, 268.0, 46.0, -2)
 	# hall ceiling
 	_poly(PackedVector2Array([Vector2(1560, 150), Vector2(4450, 150),
 		Vector2(4450, 170), Vector2(1560, 170)]), Color(0.3, 0.28, 0.24), -1)
@@ -293,9 +303,8 @@ func _build_zone3() -> void:
 # ========================================================= ZONE 4 : armory =
 func _build_zone4() -> void:
 	# security locker against the gallery wall
-	_box2d(2940.0, 316.0, 44.0, 64.0, Color(0.2, 0.24, 0.3))
-	_poly(PackedVector2Array([Vector2(2944, 324), Vector2(2976, 324),
-		Vector2(2976, 372), Vector2(2944, 372)]), Color(0.34, 0.4, 0.48), 1)
+	_box2d(2940.0, 316.0, 44.0, 64.0, Color(0, 0, 0, 0))
+	_ground_prop("locker_metal", 2962.0, 70.0, -1, 380.0)
 	_lamp(2962.0, 330.0, Color(0.5, 0.9, 1.0), 1.0, 1.6)
 	_trigger(2900.0, 300.0, 130.0, 90.0, _on_locker_body)
 	_hint(2880.0, 270.0, "دولاب الأمن")
@@ -303,16 +312,21 @@ func _build_zone4() -> void:
 
 # ========================================================= ZONE 5 : ambush =
 func _build_zone5() -> void:
-	# french-window wall: glass panes between stone mullions
+	# french-window wall: moonlit glass, drawn between the columns
 	for i in 6:
 		var wx: float = 3120.0 + i * 120.0
-		_poly(PackedVector2Array([Vector2(wx, 170), Vector2(wx + 90, 170),
-			Vector2(wx + 90, 372), Vector2(wx, 372)]), GLASS, -1)
-		_poly(PackedVector2Array([Vector2(wx + 90, 170), Vector2(wx + 98, 170),
-			Vector2(wx + 98, 380), Vector2(wx + 90, 380)]), LIME)
+		_prop_centered("french_window", wx + 45.0, 172.0, 200.0, -2)
+	for cx in [3060.0, 2980.0]:
+		_prop_centered("column_tall", cx, 150.0, 452.0, -2)
+	_ground_prop("plant_pot", 3080.0, 62.0, -3, 380.0)
+	_ground_prop("sideboard", 2668.0, 56.0, -3, 380.0)
+	_ground_prop("armchair", 2700.0, 52.0, -3, 380.0)
+	_ground_prop("plant_pot", 3820.0, 62.0, -3, 380.0)
 	# overturned marble tables (cover)
-	_box2d(3340.0, 340.0, 78.0, 40.0, MARBLE)
-	_box2d(3560.0, 340.0, 78.0, 40.0, MARBLE)
+	_box2d(3340.0, 340.0, 78.0, 40.0, Color(0, 0, 0, 0))
+	_ground_prop("table_flipped", 3379.0, 64.0, -1, 380.0)
+	_box2d(3560.0, 340.0, 78.0, 40.0, Color(0, 0, 0, 0))
+	_ground_prop("table_flipped", 3599.0, 64.0, -1, 380.0)
 	# exit barricade (unlocks when the squad falls)
 	_exit_bar = _box2d(3860.0, 230.0, 22.0, 166.0, Color(0.5, 0.2, 0.2))
 	_trigger(3140.0, 300.0, 50.0, 90.0, _on_ambush_body)
@@ -322,11 +336,11 @@ func _build_zone5() -> void:
 # ========================================================= ZONE 6 : terrace =
 func _build_zone6() -> void:
 	# terrace floor is the same mezzanine slab; balustrade till the gap
-	for bx in range(3880, 4280, 66):
-		_poly(PackedVector2Array([Vector2(bx, 300), Vector2(bx + 10, 300),
-			Vector2(bx + 10, 380), Vector2(bx, 380)]), STONE)
+	for bx in range(3880, 4280, 104):
+		_ground_prop("balustrade", bx + 52.0, 88.0, 0, 380.0)
 	_poly(PackedVector2Array([Vector2(3880, 292), Vector2(4280, 292),
-		Vector2(4280, 302), Vector2(3880, 302)]), STONE)
+		Vector2(4280, 302), Vector2(3880, 302)]), STONE, 1)
+	_ground_prop("plant_pot", 3898.0, 60.0, 1, 380.0)
 	# broken end + the canal below
 	_poly(PackedVector2Array([Vector2(4290, 640), Vector2(4450, 640),
 		Vector2(4450, 720), Vector2(4290, 720)]), Color(0.05, 0.12, 0.24), -2)
@@ -399,9 +413,14 @@ func _on_breach_body(body: Node2D) -> void:
 	# 1) seal the door line behind the player
 	_door_seal = _box2d(1564.0, 230.0, 14.0, 386.0, WOOD)
 	# 2) the armored van rams in from the courtyard (visual swoop + rubble)
-	var van := _poly(PackedVector2Array([Vector2(0, 0), Vector2(150, 0),
-		Vector2(150, 84), Vector2(0, 84)]), VAN_COL, 2)
-	van.position = Vector2(1150, 340)
+	var van := _tex_sprite(ENV + "van_armored.png", 1.0, Vector2(1150, 340))
+	if van.texture == null:
+		return
+	var vsc := 84.0 / float(van.texture.get_height())
+	van.scale = Vector2(-vsc, vsc)  # nose-first toward the doors
+	van.centered = false
+	van.modulate = Color(0.85, 0.87, 1.0)
+	add_child(van)
 	var tw := create_tween()
 	tw.tween_property(van, "position:x", 1490.0, 0.5).set_trans(Tween.TRANS_QUAD) \
 		.set_ease(Tween.EASE_IN)
@@ -507,7 +526,19 @@ func _fade_title() -> void:
 
 
 # ---------------------------------------------------------- hint reveal ---
-func _prop_centered(name: String, cx: float, top: float, target_h: float) -> void:
+func _stretch_prop(name: String, x: float, y: float, w: float, h: float, z := -2) -> void:
+	var s := _tex_sprite(ENV + name + ".png", 1.0, Vector2.ZERO)
+	if s.texture == null:
+		return
+	s.scale = Vector2(w / float(s.texture.get_width()),
+		h / float(s.texture.get_height()))
+	s.centered = false
+	s.position = Vector2(x, y)
+	s.z_index = z
+	add_child(s)
+
+
+func _prop_centered(name: String, cx: float, top: float, target_h: float, z := -1) -> void:
 	var s := _tex_sprite(ENV + name + ".png", 1.0, Vector2.ZERO)
 	if s.texture == null:
 		return
@@ -515,7 +546,7 @@ func _prop_centered(name: String, cx: float, top: float, target_h: float) -> voi
 	s.scale = Vector2(sc, sc)
 	s.centered = false
 	s.position = Vector2(cx - float(s.texture.get_width()) * sc * 0.5, top)
-	s.z_index = -1
+	s.z_index = z
 	add_child(s)
 
 
