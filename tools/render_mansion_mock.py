@@ -89,7 +89,9 @@ def main():
               "doors_mahogany", "column_tall", "chandelier", "stairs_marble",
               "rug_strip", "sconce", "locker_metal", "sideboard", "armchair",
               "plant_pot", "french_window", "table_flipped", "balustrade",
-              "hose_reel"]:
+              "hose_reel", "facade_strip", "entrance_arch", "balcony",
+              "window_shutter", "cornice", "carriage_lamp", "roofline",
+              "iron_gate", "floor_planks"]:
         try:
             sprites[n] = load(n)
         except OSError:
@@ -135,21 +137,40 @@ def main():
     # the squad van already rolling in across the lawn (mock framing)
     stamp(cv, sprites["van_armored"], 1130, 610, 108, (1.0, 1.0, 1.12), flip=True)
     rect(cv, 1180, 592, 230, 7, (255, 200, 90, 110))  # headlight sweep on grass
+    # iron gate thrown open + carriage lamp by the entry
+    if sprites["iron_gate"] is not None:
+        g = sprites["iron_gate"]
+        gh = 170
+        gw = int(g.width * (gh / g.height))
+        gt = g.resize((gw, gh), Image.LANCZOS).rotate(12, expand=True,
+                                                      fillcolor=(0, 0, 0, 0))
+        cv.paste(gt, (int(1430 - gt.width / 2), int(600 + OY - gt.height)), gt)
+    stamp(cv, sprites["carriage_lamp"], 1530, 600, 150)
 
     # ================= ZONE 3 : hall walls FIRST (backdrop) ============
     rect(cv, 1560, 170, 2990, 446, (33, 26, 19))     # warm wall
-    rect(cv, 1560, 380, 2990, 236, (40, 31, 23))     # under-mezz hall
-    rect(cv, 1560, 470, 2990, 4, (66, 52, 38))       # wainscot line
-    rect(cv, 1560, 596, 2990, 20, (56, 46, 34))      # hall floor band
+    rect(cv, 1560, 380, 2990, 236, (52, 42, 31))     # under-mezz hall
+    rect(cv, 1560, 470, 2990, 6, (78, 62, 46))       # wainscot line
+    rect(cv, 1560, 596, 2990, 20, (64, 52, 38))      # hall floor band
 
     # ================= ZONE 2 : facade + doors =========================
-    rect(cv, 1560, 170, 345, 60, (116, 108, 96))     # limestone band
-    rect(cv, 1560, 230, 345, 20, (70, 64, 56))
     rect(cv, 1560, 600, 350, 16, (52, 44, 34))       # foyer floor
+    # upper story facade + roofline silhouette along the whole hall
+    stamp_xy(cv, sprites["facade_strip"], 1560, 170, 345, 60)
+    stamp_xy(cv, sprites["facade_strip"], 1905, 84, 2545, 64, (0.62, 0.62, 0.72))
+    stamp_xy(cv, sprites["roofline"], 1560, 50, 2890, 42)
+    # grand entry: doors inside their arch, balcony floating above
     stamp(cv, sprites["doors_mahogany"], 1568, 600, 188)
+    stamp(cv, sprites["entrance_arch"], 1568, 600, 218)
+    stamp(cv, sprites["balcony"], 1568, 392, 88)
     stamp(cv, sprites["column_tall"], 1686, 602, 452)
 
     # ================= ZONE 3 : hall ===================================
+    # cornice crowning the hall walls + under-mezz detailing
+    stamp_xy(cv, sprites["cornice"], 1560, 148, 2990, 22, (0.85, 0.85, 0.95))
+    for cx in [2000, 2400, 2780]:
+        stamp(cv, sprites["window_shutter"], cx, 604, 128, (0.9, 0.9, 1.0))
+    stamp_xy(cv, sprites["floor_planks"], 1560, 602, 2990, 14, (1.0, 0.92, 0.8))
     rect(cv, 1750, 380, 2550, 16, (110, 102, 92))    # mezzanine slab
     rect(cv, 1750, 396, 2550, 6, (60, 55, 49))
     # red runner carpet
@@ -219,6 +240,7 @@ def main():
     glow = Image.new("RGBA", cv.size, (0, 0, 0, 0))
     gd = ImageDraw.Draw(glow)
     glows = [(850, 330, (255, 244, 200), 130), (1160, 330, (255, 244, 200), 130),
+             (1530, 462, (255, 184, 90), 110),
              (2212, 300, (255, 204, 115), 190), (1850, 300, (255, 191, 102), 120),
              (2300, 300, (255, 191, 102), 120), (2900, 300, (255, 191, 102), 120),
              (3500, 300, (255, 191, 102), 120), (4100, 300, (255, 191, 102), 120),

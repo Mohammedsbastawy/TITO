@@ -262,11 +262,20 @@ func _build_zone1() -> void:
 
 # ========================================================= ZONE 2 : breach =
 func _build_zone2() -> void:
-	# mansion facade: left wall over the door gate
-	_poly(PackedVector2Array([Vector2(1560, 170.0), Vector2(1905, 170.0),
-		Vector2(1905, 230.0), Vector2(1560, 230.0)]), LIME, 0)
-	# the very doors the squad will ram through
+	# the estate's iron gate, thrown open by the ram (leans on the lawn)
+	var gate := _ground_prop("iron_gate", 1430.0, 170.0, -1)
+	gate.rotation_degrees = -12.0
+	# carriage lamp glowing by the entry
+	_ground_prop("carriage_lamp", 1530.0, 150.0, -1)
+	_lamp(1530.0, 462.0, Color(1.0, 0.72, 0.35), 1.6, 2.2)
+	# mansion facade over approach + the whole upper story along the hall
+	_stretch_prop("facade_strip", 1560.0, 170.0, 345.0, 60.0, -2)
+	_stretch_prop("facade_strip", 1905.0, 84.0, 2545.0, 64.0, -4)
+	_stretch_prop("roofline", 1560.0, 50.0, 2890.0, 42.0, -4)
+	# the very doors the squad will ram through (grand arch + balcony above)
 	_ground_prop("doors_mahogany", 1568.0, 188.0, -2, 600.0)
+	_ground_prop("entrance_arch", 1568.0, 218.0, -1, 600.0)
+	_ground_prop("balcony", 1568.0, 88.0, -1, 392.0)
 	_prop_centered("column_tall", 1686.0, 150.0, 452.0, -2)
 	# the doors will be rammed; keep the gate open until the breach seals it
 	_box2d(1560.0, 600.0, 350.0, 36.0, Color(0, 0, 0, 0))  # foyer floor
@@ -295,9 +304,14 @@ func _build_zone3() -> void:
 	for wx in [1850.0, 2300.0, 2900.0, 3500.0, 4100.0]:
 		_lamp(wx, 300.0, Color(1.0, 0.75, 0.4), 1.5, 2.4)
 		_prop_centered("sconce", wx, 268.0, 46.0, -2)
-	# hall ceiling
+	# hall ceiling + classic cornice band on top of the walls
 	_poly(PackedVector2Array([Vector2(1560, 150), Vector2(4450, 150),
 		Vector2(4450, 170), Vector2(1560, 170)]), Color(0.3, 0.28, 0.24), -1)
+	_stretch_prop("cornice", 1560.0, 148.0, 2990.0, 22.0, -2)
+	# under-mezz hall: shuttered windows + parquet runner under everything
+	for cx in [2000.0, 2400.0, 2780.0]:
+		_ground_prop("window_shutter", cx, 128.0, -3, 604.0)
+	_stretch_prop("floor_planks", 1560.0, 602.0, 2990.0, 14.0, -3)
 
 
 # ========================================================= ZONE 4 : armory =
