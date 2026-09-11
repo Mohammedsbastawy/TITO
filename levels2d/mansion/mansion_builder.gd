@@ -58,6 +58,13 @@ var _door_seal: StaticBody2D = null
 # ambush handles
 var _ambush_done := false
 var _squad_alive := 0
+# locker sidearm: stun-dart system state
+var _sidearm := false
+var _ammo := 0
+var _ammo_pips: Array = []
+var _cooldown := 0.0
+# swinging chandelier handle (kick feedback hooks in the outro beat)
+var _swing: SwingChandelier2D = null
 var _exit_bar: StaticBody2D = null
 var _locker_done := false
 # outro
@@ -78,6 +85,8 @@ func _ready() -> void:
 	_build_gameplay()
 	_build_prompts()
 	_build_outro_overlay()
+	_build_rain()
+	_build_sidearm_hud()
 	var afx := AmbientFx2D.new()
 	afx.follow = _cam
 	add_child(afx)
@@ -286,10 +295,12 @@ func _build_zone2() -> void:
 # ========================================================= ZONE 3 : foyer ==
 func _build_zone3() -> void:
 	_box2d(1910.0, 600.0, 700.0, 36.0, Color(0, 0, 0, 0))
-	# chandelier pass (one-way hoop until a real pendulum lands)
-	_prop_centered("chandelier", 2212.0, 150.0, 162.0, -1)
-	_box2d(2168.0, 290.0, 88.0, 10.0, Color(0.66, 0.55, 0.28), true)
-	_lamp(2212.0, 300.0, Color(1.0, 0.8, 0.45), 2.0, 2.6)
+	# chandelier pass: a REAL pendulum — land on it and it picks up swing
+	_swing = SwingChandelier2D.new()
+	_swing.position = Vector2(2212.0, 148.0)
+	_swing.total_h = 150.0
+	_swing.plate_w = 88.0
+	add_child(_swing)
 	_hint(2130.0, 340.0, "من الميزانين انط على النجفة تعدّي بسرعة")
 	# marble steps up to the mezzanine (art under the collision)
 	for i in 4:
@@ -330,6 +341,25 @@ func _build_zone5() -> void:
 	for i in 6:
 		var wx: float = 3120.0 + i * 120.0
 		_prop_centered("french_window", wx + 45.0, 172.0, 200.0, -2)
+	# heavy velvet curtains breathing on the mullions (wind shader)
+	var sway_mat := ShaderMaterial.new()
+	sway_mat.shader = load("res://core2d/fx/wind_sway.gdshader") as Shader
+	var ci := 0
+	for mcx in [3210.0, 3330.0, 3450.0, 3570.0, 3690.0, 3810.0]:
+		var cur := _tex_sprite(ENV + "curtain_panel.png", 1.0, Vector2.ZERO)
+		if cur.texture == null:
+			break
+		var csc := 196.0 / float(cur.texture.get_height())
+		cur.scale = Vector2(csc, csc)
+		cur.centered = false
+		cur.position = Vector2(mcx - float(cur.texture.get_width()) * csc * 0.5, 174.0)
+		cur.z_index = -1
+		var m := ShaderMaterial.new()
+		m.shader = sway_mat.shader
+		m.set_shader_parameter("phase", float(ci) * 0.9)
+		cur.material = m
+		add_child(cur)
+		ci += 1
 	for cx in [3060.0, 2980.0]:
 		_prop_centered("column_tall", cx, 150.0, 452.0, -2)
 	_ground_prop("plant_pot", 3080.0, 62.0, -3, 380.0)
@@ -419,6 +449,78 @@ func _build_prompts() -> void:
 	pass  # Arabic flags already planted in zone builders
 
 
+# ---------------------------------------------------------- sidearm -------=
+func _build_sidearm_hud() -> void:
+	if not InputMap.has_action("fire_sidearm"):
+		InputMap.add_action("fire_sidearm")
+		var ev := InputEventKey.new()
+		ev.physical_keycode = KEY_J
+		InputMap.action_add_event("fire_sidearm", ev)
+		var pad := InputEventJoypadButton.new()
+		pad.button_index = JOY_BUTTON_X
+		InputMap.action_add_event("fire_sidearm", pad)
+	var lay := CanvasLayer.new()
+	lay.layer = 40
+	add_child(lay)
+	var tag := Label.new()
+	tag.text = "SIDEARM"
+	tag.add_theme_font_override("font", load(FONT_BOLD) as Font)
+	tag.add_theme_font_size_override("font_size", 13)
+	tag.modulate = Color(0.55, 1.0, 0.8, 0.0)
+	tag.position = Vector2(1162, 668)
+	lay.add_child(tag)
+	_ammo_pips.append(tag)
+	for i in 6:
+		var pip := ColorRect.new()
+		pip.position = Vector2(1242 - i * 18, 666)
+		pip.size = Vector2(12, 20)
+		pip.color = Color(0.4, 1.0, 0.75, 1.0)
+		lay.add_child(pip)
+		_ammo_pips.append(pip)
+
+
+func _update_ammo_hud() -> void:
+	for i in _ammo_pips.size():
+		var n := _ammo_pips[i]
+		var lit := (i == 0 and _sidearm) or (i > 0 and i - 1 < _ammo)
+		n.modulate.a = (1.0 if lit else 0.18) if _sidearm else 0.0
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _sidearm or _ammo <= 0 or _cooldown > 0.0:
+		return
+	if _player == null or _player._intro_lock:
+		return
+	if event.is_action_pressed("fire_sidearm"):
+		_ammo -= 1
+		_cooldown = 0.35
+		var d := Dart2D.new()
+		add_child(d)
+		var dir := Vector2(_player.facing, 0)
+		d.launch(_player.global_position + Vector2(dir.x * 14.0, -46.0), dir)
+		_update_ammo_hud()
+		get_tree().create_timer(0.35).timeout.connect(
+			func() -> void: _cooldown = 0.0)
+
+
+# ---------------------------------------------------------- night rain ----=
+func _build_rain() -> void:
+	# thin chilly drizzle over the garden approach
+	var g := Rain2D.new()
+	g.region = Rect2(-40.0, -150.0, 1680.0, 790.0)
+	g.drops = 120
+	g.slant = 0.12
+	add_child(g)
+	# harder gusts off the canal on the terrace escape
+	var t := Rain2D.new()
+	t.region = Rect2(3820.0, -150.0, 680.0, 790.0)
+	t.drops = 160
+	t.slant = 0.2
+	t.base_speed = 700.0
+	t.tint = Color(0.62, 0.74, 1.0, 0.42)
+	add_child(t)
+
+
 # ============================================================ events ======
 func _on_breach_body(body: Node2D) -> void:
 	if _breach_done or not body.is_in_group("player"):
@@ -461,6 +563,11 @@ func _on_locker_body(body: Node2D) -> void:
 	_locker_done = true
 	_lamp(2962.0, 340.0, Color(0.4, 1.0, 0.7), 1.6, 2.0)
 	_dialogue.play(LINES_LOCKER, Callable(self, "_noop"))
+	# gear up: the stun sidearm comes online, HUD pips light up
+	_sidearm = true
+	_ammo = 6
+	_update_ammo_hud()
+	_hint(2962.0, 250.0, "زرار J (أو X على الدراع) — سهم مساند")
 
 
 func _noop() -> void:

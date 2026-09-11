@@ -233,6 +233,18 @@ def main():
     except OSError:
         pass
 
+    # ================= drizzle over garden + terrace ===================
+    rnd = random.Random(9)
+    rain = Image.new("RGBA", cv.size, (0, 0, 0, 0))
+    rd = ImageDraw.Draw(rain)
+    for _ in range(260):
+        rx = rnd.uniform(-40, 1640) if rnd.random() < 0.62 else rnd.uniform(3820, 4500)
+        ry = rnd.uniform(820, 1600)
+        ln = rnd.uniform(9, 16)
+        rd.line([(rx, ry), (rx + ln * 0.14, ry + ln)],
+                fill=(158, 189, 255, 70), width=1)
+    cv = Image.alpha_composite(cv, rain)
+
     # ================= night grade + lamp glows ========================
     grade = Image.new("RGB", cv.size, (102, 117, 168))
     cv = ImageChops.multiply(cv.convert("RGB"), grade).convert("RGBA")

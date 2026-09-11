@@ -46,6 +46,7 @@ SHEETS = {
                                      'window_shutter', 'cornice',
                                      'carriage_lamp', 'roofline', 'iron_gate',
                                      'floor_planks']},
+    'curtain_sheet': {'names': ['curtain_panel']},
     'facades_b': {'mode': 'whole'},
     'facades_c': {'mode': 'whole'},
     'facades_d': {'mode': 'whole'},
