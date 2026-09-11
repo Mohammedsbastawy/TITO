@@ -537,6 +537,12 @@ func _fade_title() -> void:
 	tw.set_parallel()
 	tw.tween_property(_black, "color:a", 1.0, 1.6)
 	tw.tween_property(_title, "modulate:a", 1.0, 1.6).set_delay(0.8)
+	tw.chain().tween_callback(_goto_next)
+
+
+func _goto_next() -> void:
+	await get_tree().create_timer(2.4).timeout
+	get_tree().change_scene_to_file("res://levels2d/chapter1/chapter1.tscn")
 
 
 # ---------------------------------------------------------- hint reveal ---
