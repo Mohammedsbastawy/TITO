@@ -481,8 +481,8 @@ func _build_sidearm_hud() -> void:
 
 func _update_ammo_hud() -> void:
 	for i in _ammo_pips.size():
-		var n := _ammo_pips[i]
-		var lit := (i == 0 and _sidearm) or (i > 0 and i - 1 < _ammo)
+		var n: CanvasItem = _ammo_pips[i]
+		var lit: bool = (i == 0 and _sidearm) or (i > 0 and i - 1 < _ammo)
 		n.modulate.a = (1.0 if lit else 0.18) if _sidearm else 0.0
 
 
